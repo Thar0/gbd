@@ -1,0 +1,3 @@
+[submodule "libgfxd"]
+	path = libgfxd
+	url = git@github.com:Thar0/libgfxd.git

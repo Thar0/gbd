@@ -21,7 +21,7 @@ typedef struct
     float mf[4][4];
 } MtxF;
 
-#include "dgb.h"
+#include "gbd.h"
 
 #define F3DZEX_CONST(name) \
     { name, #name }

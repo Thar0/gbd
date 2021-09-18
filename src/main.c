@@ -3,7 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include <sys/stat.h>
-#include "dgb.h"
+#include "gbd.h"
 
 static bool
 file_exists (const char *filename) {

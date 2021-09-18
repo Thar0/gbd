@@ -11,12 +11,12 @@ $(shell mkdir -p $(foreach dir,$(SRC_DIRS),build/$(dir)))
 .PHONY: all clean
 .DEFAULT_GOAL := all
 
-all: build/gbidbg
+all: build/gbd
 
 clean:
 	$(RM) -rf build
 
-build/gbidbg: $(O_FILES) build/libgfxd.a
+build/gbd: $(O_FILES) build/libgfxd.a
 	$(CC) $^ /usr/local/lib/libiconv.a -o $@
 
 build/libgfxd.a:

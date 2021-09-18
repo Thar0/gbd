@@ -1,8 +1,8 @@
 # IDE artifacts
 .vscode/**
 
-# pj64 ram dumps for testing
-dumps/**
-
 # build artifacts
 build/**
+
+# pj64 ram dumps for testing
+dumps/**

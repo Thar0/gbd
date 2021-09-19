@@ -1,3 +1,21 @@
+/**
+ *     Graphics Binary Debugger targeting F3DZEX and S2DEX2, for Zelda 64.
+ *  
+ *  Copyright (C) 2021  Tharo
+ *  
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU Lesser General Public License as published 
+ *  by the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ *  
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU Lesser General Public License for more details.
+ *  
+ *  You should have received a copy of the GNU Lesser General Public License
+ *  along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ */
 #include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -7,13 +25,13 @@
 
 #define F3DEX_GBI_2
 #include "libgfxd/gbi.h"
-// Additional geometry mode
+// Additional geometry mode in MM
 #define G_LIGHTING_POSITIONAL   (gI_(0b1) << 22)
 
-#define _SHIFTL(v, n, s)    \
+#define SHIFTL(v, n, s)    \
     ((uint32_t)(((uint32_t)(v) & ((((uint32_t)(1)) << (n)) - 1)) << (s)))
 
-#define _SHIFTR(v, n, s)    \
+#define SHIFTR(v, n, s)    \
     ((uint32_t)(((uint32_t)(v) >> (s)) & ((((uint32_t)(1)) << (n)) - 1)))
 
 typedef struct
@@ -227,7 +245,7 @@ mtx_to_mtxf (MtxF *mf, Mtx *mtx, bool swap)
  * the DRAM Stack of the most recently placed Mtx.
  */
 
-
+// TODO
 
 /**************************************************************************
  *  Address Conversion and Checking
@@ -266,6 +284,8 @@ addr_in_rdram (uint32_t addr)
 /**************************************************************************
  *  Texture Engine Emulator
  */
+
+// TODO
 
 typedef struct
 {
@@ -320,6 +340,8 @@ emu_settilesize()
 /**************************************************************************
  *  Memory Interface
  */
+
+// TODO
 
 typedef struct
 {
@@ -1264,22 +1286,22 @@ static void
 print_cc (void)
 {
     printf("%s, %s, %s, %s" ", " "%s, %s, %s, %s" ", " "%s, %s, %s, %s" ", " "%s, %s, %s, %s", 
-            cc_str(_SHIFTR(combine_mode_hi, 4, 20), 0), 
-            cc_str(_SHIFTR(combine_mode_lo, 4, 28), 1), 
-            cc_str(_SHIFTR(combine_mode_hi, 5, 15), 2), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 15), 3), 
-            cc_str(_SHIFTR(combine_mode_hi, 3, 12), 4), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 12), 5), 
-            cc_str(_SHIFTR(combine_mode_hi, 3, 9),  6), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 9),  7), 
-            cc_str(_SHIFTR(combine_mode_hi, 4, 5),  8), 
-            cc_str(_SHIFTR(combine_mode_lo, 4, 24), 9), 
-            cc_str(_SHIFTR(combine_mode_hi, 5, 0),  10), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 6),  11), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 21), 12), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 3),  13), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 18), 14), 
-            cc_str(_SHIFTR(combine_mode_lo, 3, 0),  15));
+            cc_str(SHIFTR(combine_mode_hi, 4, 20), 0), 
+            cc_str(SHIFTR(combine_mode_lo, 4, 28), 1), 
+            cc_str(SHIFTR(combine_mode_hi, 5, 15), 2), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 15), 3), 
+            cc_str(SHIFTR(combine_mode_hi, 3, 12), 4), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 12), 5), 
+            cc_str(SHIFTR(combine_mode_hi, 3, 9),  6), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 9),  7), 
+            cc_str(SHIFTR(combine_mode_hi, 4, 5),  8), 
+            cc_str(SHIFTR(combine_mode_lo, 4, 24), 9), 
+            cc_str(SHIFTR(combine_mode_hi, 5, 0),  10), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 6),  11), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 21), 12), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 3),  13), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 18), 14), 
+            cc_str(SHIFTR(combine_mode_lo, 3, 0),  15));
 }
 
 static void
@@ -1555,52 +1577,52 @@ macro_fn (void)
         case gfxd_DPSetCombineLERP:
             arg_value = gfxd_value_by_type(gfxd_Ccmuxa, 0);
             if (arg_value != NULL)
-                cc_hi |= _SHIFTL(arg_value->i, 4, 20);
+                cc_hi |= SHIFTL(arg_value->i, 4, 20);
             arg_value = gfxd_value_by_type(gfxd_Ccmuxb, 0);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 4, 28);
+                cc_lo |= SHIFTL(arg_value->i, 4, 28);
             arg_value = gfxd_value_by_type(gfxd_Ccmuxc, 0);
             if (arg_value != NULL)
-                cc_hi |= _SHIFTL(arg_value->i, 5, 15);
+                cc_hi |= SHIFTL(arg_value->i, 5, 15);
             arg_value = gfxd_value_by_type(gfxd_Ccmuxd, 0);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 15);
+                cc_lo |= SHIFTL(arg_value->i, 3, 15);
             arg_value = gfxd_value_by_type(gfxd_Acmuxabd, 0);
             if (arg_value != NULL)
-                cc_hi |= _SHIFTL(arg_value->i, 3, 12);
+                cc_hi |= SHIFTL(arg_value->i, 3, 12);
             arg_value = gfxd_value_by_type(gfxd_Acmuxabd, 1);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 12);
+                cc_lo |= SHIFTL(arg_value->i, 3, 12);
             arg_value = gfxd_value_by_type(gfxd_Acmuxc, 0);
             if (arg_value != NULL)
-                cc_hi |= _SHIFTL(arg_value->i, 3, 9);
+                cc_hi |= SHIFTL(arg_value->i, 3, 9);
             arg_value = gfxd_value_by_type(gfxd_Acmuxabd, 2);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 9);
+                cc_lo |= SHIFTL(arg_value->i, 3, 9);
             arg_value = gfxd_value_by_type(gfxd_Ccmuxa, 1);
             if (arg_value != NULL)
-                cc_hi |= _SHIFTL(arg_value->i, 4, 5);
+                cc_hi |= SHIFTL(arg_value->i, 4, 5);
             arg_value = gfxd_value_by_type(gfxd_Ccmuxb, 1);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 4, 24);
+                cc_lo |= SHIFTL(arg_value->i, 4, 24);
             arg_value = gfxd_value_by_type(gfxd_Ccmuxc, 1);
             if (arg_value != NULL)
-                cc_hi |= _SHIFTL(arg_value->i, 5, 0);
+                cc_hi |= SHIFTL(arg_value->i, 5, 0);
             arg_value = gfxd_value_by_type(gfxd_Ccmuxd, 1);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 6);
+                cc_lo |= SHIFTL(arg_value->i, 3, 6);
             arg_value = gfxd_value_by_type(gfxd_Acmuxabd, 3);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 21);
+                cc_lo |= SHIFTL(arg_value->i, 3, 21);
             arg_value = gfxd_value_by_type(gfxd_Acmuxabd, 4);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 3);
+                cc_lo |= SHIFTL(arg_value->i, 3, 3);
             arg_value = gfxd_value_by_type(gfxd_Acmuxc, 1);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 18);
+                cc_lo |= SHIFTL(arg_value->i, 3, 18);
             arg_value = gfxd_value_by_type(gfxd_Acmuxabd, 5);
             if (arg_value != NULL)
-                cc_lo |= _SHIFTL(arg_value->i, 3, 0);
+                cc_lo |= SHIFTL(arg_value->i, 3, 0);
             goto cc_set;
         case gfxd_DPSetCombineMode:
             arg_value = gfxd_value_by_type(gfxd_Ccpre, 0);
@@ -1901,6 +1923,7 @@ arg_handler (int arg_num)
         case gfxd_Zimg:
             if (segmented_to_physical(arg_value->u) % 0x40 != 0)
                 pipeline_crashed = true;
+            /* intentional fallthrough */
         case gfxd_Timg:
         case gfxd_Tlut:
         case gfxd_Vtxptr:
@@ -1975,7 +1998,7 @@ arg_handler (int arg_num)
  */
 
 int
-analyze_gbi (const char *file_name, uint32_t start_addr)
+analyze_gbi (const char *file_name, uint32_t start_addr, bool print_textures, bool print_vertices, bool print_matrices)
 {
     if (rdram_open(file_name))
         goto err; // TODO error message
@@ -2022,31 +2045,25 @@ analyze_gbi (const char *file_name, uint32_t start_addr)
         gfx_addr += last_macro_size;
         n_gfx++;
 
-        if (last_timg.timg != 0)
+        if (print_textures && last_timg.timg != 0)
         {
             draw_last_timg();
             memset(&last_timg, 0, sizeof(last_timg));
         }
-        if (last_vtx.vtx != 0)
+        if (print_vertices && last_vtx.vtx != 0)
         {
             print_last_vtx();
 
             last_vtx.vtx = 0;
             last_vtx.num = 0;
         }
-        if (last_mtx.mtx != 0)
+        if (print_matrices && last_mtx.mtx != 0)
         {
             print_last_mtx();
 
             last_mtx.mtx = 0;
             last_mtx.params = 0;
         }
-        // TODO attempt an actually good buffer overflow check?
-/*         if (i > 0x2460)
-        {
-            printf("Buffer overflow!\n");
-            pipeline_crashed = true;
-        } */
         gfxd_target(next_ucode);
     }
 

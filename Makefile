@@ -23,7 +23,7 @@ build/libgfxd.a:
 	$(MAKE) -C libgfxd && mv libgfxd/libgfxd.a build
 
 build/src/%.o: src/%.c
-	$(CC) $(OPTFLAGS) -I. -Isrc -Iinclude -c $< -o $@
+	$(CC) $(OPTFLAGS) -I. -Isrc -c $< -o $@
 
 libiconv:
 ifeq (,$(wildcard /usr/local/lib/libiconv.a))

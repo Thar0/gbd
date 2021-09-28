@@ -6,3 +6,6 @@ build/**
 
 # pj64 ram dumps for testing
 dumps/**
+
+# libiconv windows
+libiconv-win/**

@@ -20,7 +20,13 @@
 #include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
-#include <iconv.h>
+
+#ifdef WINDOWS
+# include "libiconv-win/include/iconv.h"
+#else
+# include <iconv.h>
+#endif
+
 #include "libgfxd/gfxd.h"
 
 #define F3DEX_GBI_2
@@ -48,6 +54,17 @@ typedef struct
     { (set_name) & ~(unset_name), #set_name, #unset_name }
 
 #define ARRAY_COUNT(arr) (sizeof(arr) / sizeof(arr[0]))
+
+// TODO make more portable
+#define BSWAP16(x)      \
+    __builtin_bswap16(x)
+
+// TODO make more portable
+#define BSWAP32(x)      \
+    __builtin_bswap32(x)
+
+#define MAYBE_BSWAP16(v, c) \
+    ((c) ? BSWAP16(v) : (v))
 
 #define KSEG_MASK (0b111 << 29)
 
@@ -189,9 +206,6 @@ static int dl_stack_push(uint32_t dl)
 /**************************************************************************
  *  Matrix Conversion
  */
-
-#define MAYBE_BSWAP16(v, c) \
-    ((c) ? __builtin_bswap16((v)) : (v))
 
 static inline void
 f_to_qs1616(int16_t *int_out, uint16_t *frac_out, float f)
@@ -440,7 +454,7 @@ draw_last_timg (void)
 
                         for (int k = 0; k < 2; k++)
                         {
-                            uint16_t tlut_px = __builtin_bswap16(tlut_pxs[k]); // TODO make more portable
+                            uint16_t tlut_px = BSWAP16(tlut_pxs[k]);
 
                             switch (last_timg.tlut_type)
                             {
@@ -495,7 +509,7 @@ draw_last_timg (void)
                             goto err;
                         rdram_seek(save_pos);
 
-                        tlut_px = __builtin_bswap16(tlut_px); // TODO make more portable
+                        tlut_px = BSWAP16(tlut_px);
 
                         switch (last_timg.tlut_type)
                         {
@@ -515,7 +529,7 @@ draw_last_timg (void)
                         if (rdram_read(&ia16_px, sizeof(uint16_t), 1) != 1)
                             goto err;
 
-                        ia16_px = __builtin_bswap16(ia16_px); // TODO make more portable
+                        ia16_px = BSWAP16(ia16_px);
 
                         // TODO most of these require the alpha channel to be visible to properly see what these look like
                         PRINT_PX(CVT_PX(ia16_px, 8, 255), CVT_PX(ia16_px, 8, 255), CVT_PX(ia16_px, 8, 255));
@@ -528,7 +542,7 @@ draw_last_timg (void)
                         if (rdram_read(&rgba16_px, sizeof(uint16_t), 1) != 1)
                             goto err;
 
-                        rgba16_px = __builtin_bswap16(rgba16_px); // TODO make more portable
+                        rgba16_px = BSWAP16(rgba16_px);
 
                         PRINT_PX(CVT_PX(rgba16_px, 11, 31), CVT_PX(rgba16_px, 6, 31), CVT_PX(rgba16_px, 1, 31));
                     }
@@ -540,7 +554,7 @@ draw_last_timg (void)
                         if (rdram_read(&rgba32_px, sizeof(uint32_t), 1) != 1)
                             goto err;
 
-                        rgba32_px = __builtin_bswap32(rgba32_px); // TODO make more portable
+                        rgba32_px = BSWAP32(rgba32_px);
 
                         PRINT_PX(CVT_PX(rgba32_px, 24, 255), CVT_PX(rgba32_px, 16, 255), CVT_PX(rgba32_px, 8, 255));
                     }
@@ -1366,12 +1380,12 @@ print_last_vtx (void)
         if (rdram_read(&vtx, sizeof(Vtx), 1) != 1)
             goto err;
 
-        vtx.v.ob[0] = __builtin_bswap16(vtx.v.ob[0]);
-        vtx.v.ob[1] = __builtin_bswap16(vtx.v.ob[1]);
-        vtx.v.ob[2] = __builtin_bswap16(vtx.v.ob[2]);
-        vtx.v.flag  = __builtin_bswap16(vtx.v.flag);
-        vtx.v.tc[0] = __builtin_bswap16(vtx.v.tc[0]);
-        vtx.v.tc[1] = __builtin_bswap16(vtx.v.tc[1]);
+        vtx.v.ob[0] = BSWAP16(vtx.v.ob[0]);
+        vtx.v.ob[1] = BSWAP16(vtx.v.ob[1]);
+        vtx.v.ob[2] = BSWAP16(vtx.v.ob[2]);
+        vtx.v.flag  = BSWAP16(vtx.v.flag);
+        vtx.v.tc[0] = BSWAP16(vtx.v.tc[0]);
+        vtx.v.tc[1] = BSWAP16(vtx.v.tc[1]);
 
         printf("\t{ { { %6d, %6d, %6d }, %d, { %6d, %6d }, { %4d, %4d, %4d, %4d } } }\n", 
                 vtx.v.ob[0], vtx.v.ob[1], vtx.v.ob[2], 
@@ -1994,7 +2008,7 @@ arg_handler (int arg_num)
 }
 
 /**************************************************************************
- *  
+ *  Run
  */
 
 int
@@ -2010,7 +2024,7 @@ analyze_gbi (const char *file_name, uint32_t start_addr, bool print_textures, bo
         if (rdram_seek(0x12D260) || rdram_read(&auto_start_addr, sizeof(uint32_t), 1) != 1)
             goto err; // TODO error message
 
-        start_addr = __builtin_bswap32(auto_start_addr);
+        start_addr = BSWAP32(auto_start_addr);
     }
 
     start_addr &= ~KSEG_MASK;

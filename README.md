@@ -1,6 +1,8 @@
 # Graphics Binary Debugger
 
-The Graphics Binary Debugger, `gbd`, will inspect an N64 graphics task for errors and try to point out crashing GBI commands. Currently, it only targets F3DZEX and S2DEX2 for Zelda Ocarina of Time MQ Debug, it's scope is intended to be expanded upon in the future.
+The Graphics Binary Debugger, `gbd`, will inspect an N64 graphics task for errors and try to point out crashing GBI commands. Currently, it only targets F3DZEX and S2DEX2 for Zelda Ocarina of Time MQ Debug, it's scope is intended to be expanded upon in the future. This does not attempt to accurately simulate the microcode task or the workings of the RDP, it only seeks to validate arguments to GBI commands.
+
+It is still rather primitive, but good enough to debug several kinds of common crashes.
 
 ## Usage
 

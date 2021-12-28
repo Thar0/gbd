@@ -27,6 +27,8 @@
 # include <iconv.h>
 #endif
 
+#include "ansi_color_codes.h"
+
 #include "libgfxd/gfxd.h"
 
 #define F3DEX_GBI_2
@@ -1521,7 +1523,7 @@ decode_noop_cmd (void)
             gfxd_printf("gsDPNoOpCallBack(0x%08X, 0x%04X),", noop_data->u, noop_data1->u);
             break;
         case 7:
-            gfxd_printf("gsDPNoOpOpenDisp(");
+            gfxd_printf(GRN "gsDPNoOpOpenDisp" reset "(");
             print_string_at_addr(noop_data->u, gfxd_printf);
             gfxd_printf(", %d),",  noop_data1->u);
 
@@ -1529,7 +1531,7 @@ decode_noop_cmd (void)
             last_open_disps.line = noop_data1->u;
             break;
         case 8:
-            gfxd_printf("gsDPNoOpCloseDisp(");
+            gfxd_printf(RED "gsDPNoOpCloseDisp" reset "(");
             print_string_at_addr(noop_data->u, gfxd_printf);
             gfxd_printf(", %d),",  noop_data1->u);
             break;
@@ -1540,6 +1542,9 @@ emit_noop_tag3:
             break;
     }
 }
+
+static void
+arg_handler (int arg_num);
 
 static int
 macro_fn (void)
@@ -1564,8 +1569,44 @@ macro_fn (void)
     }
     else
     {
-        /* Execute the default macro handler */
-        gfxd_macro_dflt();
+        const char *name = gfxd_macro_name();
+        if (name == NULL)
+        {
+            gfxd_puts("(Gfx){");
+        }
+        else
+        {
+            static const char *macro_colors[] =
+                {
+                    [gfxd_SPDisplayList] = CYN,
+                    [gfxd_SPEndDisplayList] = MAG,
+                };
+            int macro_id = gfxd_macro_id();
+            const char *color = NULL;
+            if (macro_id < ARRAY_COUNT(macro_colors))
+                color = macro_colors[macro_id];
+
+            if (color != NULL)
+                gfxd_puts(color);
+            gfxd_puts(name);
+            gfxd_puts(reset);
+            gfxd_puts("(");
+        }
+
+        int32_t n_arg = gfxd_arg_count();
+        for (int32_t i = 0; i < n_arg; i++)
+        {
+            if (i != 0)
+                gfxd_puts(", ");
+
+            arg_handler(i);
+        }
+
+        if (name == NULL)
+            gfxd_puts("}");
+        else
+            gfxd_puts(")");
+
         gfxd_puts(",");
     }
 

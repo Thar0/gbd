@@ -1523,7 +1523,7 @@ decode_noop_cmd (void)
             gfxd_printf("gsDPNoOpCallBack(0x%08X, 0x%04X),", noop_data->u, noop_data1->u);
             break;
         case 7:
-            gfxd_printf(GRN "gsDPNoOpOpenDisp" reset "(");
+            gfxd_printf(CLR_GREEN "gsDPNoOpOpenDisp" CLR_RESET "(");
             print_string_at_addr(noop_data->u, gfxd_printf);
             gfxd_printf(", %d),",  noop_data1->u);
 
@@ -1531,7 +1531,7 @@ decode_noop_cmd (void)
             last_open_disps.line = noop_data1->u;
             break;
         case 8:
-            gfxd_printf(RED "gsDPNoOpCloseDisp" reset "(");
+            gfxd_printf(CLR_RED "gsDPNoOpCloseDisp" CLR_RESET "(");
             print_string_at_addr(noop_data->u, gfxd_printf);
             gfxd_printf(", %d),",  noop_data1->u);
             break;
@@ -1578,8 +1578,8 @@ macro_fn (void)
         {
             static const char *macro_colors[] =
                 {
-                    [gfxd_SPDisplayList] = CYN,
-                    [gfxd_SPEndDisplayList] = MAG,
+                    [gfxd_SPDisplayList] = CLR_CYAN,
+                    [gfxd_SPEndDisplayList] = CLR_PURPLE,
                 };
             int macro_id = gfxd_macro_id();
             const char *color = NULL;
@@ -1589,7 +1589,7 @@ macro_fn (void)
             if (color != NULL)
                 gfxd_puts(color);
             gfxd_puts(name);
-            gfxd_puts(reset);
+            gfxd_puts(CLR_RESET);
             gfxd_puts("(");
         }
 

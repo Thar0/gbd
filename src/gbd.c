@@ -2053,25 +2053,52 @@ arg_handler (int arg_num)
  */
 
 int
-analyze_gbi (const char *file_name, uint32_t start_addr, bool print_textures, bool print_vertices, bool print_matrices)
+analyze_gbi (const char *file_name, struct analyze_options options)
 {
+    char* err_msg = "(no error message)";
+
     if (rdram_open(file_name))
-        goto err; // TODO error message
-
-    if (start_addr == 0xFFFFFFFF)
     {
-        uint32_t auto_start_addr;
+        err_msg = "Can't open file for rdram contents";
+        goto err;
+    }
 
-        if (rdram_seek(0x12D260) || rdram_read(&auto_start_addr, sizeof(uint32_t), 1) != 1)
-            goto err; // TODO error message
+    uint32_t start_addr;
 
-        start_addr = BSWAP32(auto_start_addr);
+    switch(options.start_addr_strat){
+        case USE_GIVEN_START_ADDR:
+            start_addr = options.start_addr;
+            break;
+
+        case USE_START_ADDR_AT_GIVEN_LOCATION:
+            if(rdram_seek(options.start_addr_location & ~KSEG_MASK)
+                || rdram_read(&start_addr, sizeof(uint32_t), 1) != 1)
+            {
+                err_msg = "Can't read given location in rdram for start_addr";
+                goto err;
+            }
+            start_addr = BSWAP32(start_addr);
+            break;
+
+        case USE_DEFAULT_START_ADDR:
+            if(rdram_seek(0x12D260) || rdram_read(&start_addr, sizeof(uint32_t), 1) != 1)
+            {
+                err_msg = "Can't read default location in rdram for start_addr";
+                goto err;
+            }
+            start_addr = BSWAP32(start_addr);
+            break;
     }
 
     start_addr &= ~KSEG_MASK;
 
+    printf("Analyzing from start address 0x%08X\n", start_addr);
+
     if (rdram_seek(start_addr))
-        goto err; // TODO error message
+    {
+        err_msg = "Can't seek to start_addr in rdram";
+        goto err;
+    }
 
     gfx_addr = start_addr;
 
@@ -2100,19 +2127,19 @@ analyze_gbi (const char *file_name, uint32_t start_addr, bool print_textures, bo
         gfx_addr += last_macro_size;
         n_gfx++;
 
-        if (print_textures && last_timg.timg != 0)
+        if (options.print_textures && last_timg.timg != 0)
         {
             draw_last_timg();
             memset(&last_timg, 0, sizeof(last_timg));
         }
-        if (print_vertices && last_vtx.vtx != 0)
+        if (options.print_vertices && last_vtx.vtx != 0)
         {
             print_last_vtx();
 
             last_vtx.vtx = 0;
             last_vtx.num = 0;
         }
-        if (print_matrices && last_mtx.mtx != 0)
+        if (options.print_matrices && last_mtx.mtx != 0)
         {
             print_last_mtx();
 
@@ -2163,6 +2190,7 @@ analyze_gbi (const char *file_name, uint32_t start_addr, bool print_textures, bo
     rdram_close();
     return 0;
 err:
+    printf("Could not analyze: %s\n", err_msg);
     rdram_close();
     return -1;
 }

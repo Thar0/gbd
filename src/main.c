@@ -23,11 +23,13 @@ int
 main (int argc, char **argv)
 {
     const char *file_name = NULL;
-    uint32_t start_addr;
 
-    bool print_textures = false;
-    bool print_vertices = false;
-    bool print_matrices = false;
+    struct analyze_options options = {
+        .start_addr_strat = USE_DEFAULT_START_ADDR,
+        .print_textures = false,
+        .print_vertices = false,
+        .print_matrices = false,
+    };
 
     if (argc < 3)
         return usage(argv[0]);
@@ -38,23 +40,41 @@ main (int argc, char **argv)
     for (int i = 1; i < argc; i++)
     {
         if (strcmp(argv[i], "--print-textures") == 0)
-            print_textures = true;
+            options.print_textures = true;
         else if (strcmp(argv[i], "--print-vertices") == 0)
-            print_vertices = true;
+            options.print_vertices = true;
         else if (strcmp(argv[i], "--print-matrices") == 0)
-            print_matrices = true;
+            options.print_matrices = true;
         else if (got_file_name)
         {
-            // start address
-            if (sscanf(argv[i], "0x%8x", &start_addr) != 1)
+            char* addr_str = argv[i];
+            if (addr_str[0] == '*')
             {
-                if (strcmp(argv[i], "AUTO") == 0)
-                    start_addr = 0xFFFFFFFF;
+                options.start_addr_strat = USE_START_ADDR_AT_GIVEN_LOCATION;
+                addr_str += 1;
+            }
+            else
+            {
+                options.start_addr_strat = USE_GIVEN_START_ADDR;
+            }
+            uint32_t addr;
+            if (sscanf(addr_str, "0x%8x", &addr) != 1)
+            {
+                if (strcmp(addr_str, "AUTO") == 0)
+                    options.start_addr_strat = USE_DEFAULT_START_ADDR;
                 else
                 {
                     printf("Bad start address.\n");
                     return -1;
                 }
+            }
+            if (options.start_addr_strat == USE_GIVEN_START_ADDR)
+            {
+                options.start_addr = addr;
+            }
+            else if (options.start_addr_strat == USE_START_ADDR_AT_GIVEN_LOCATION)
+            {
+                options.start_addr_location = addr;
             }
             got_all_args = true;
         }
@@ -74,7 +94,7 @@ main (int argc, char **argv)
     if (!got_all_args)
         return usage(argv[0]);
 
-    analyze_gbi(file_name, start_addr, print_textures, print_vertices, print_matrices);
+    analyze_gbi(file_name, options);
 
     return 0;
 }

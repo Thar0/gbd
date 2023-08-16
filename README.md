@@ -8,6 +8,12 @@ It is still rather primitive, but good enough to debug several kinds of common c
 
 `gbd <path to RAM dump> <start address>`
 
+or
+
+`gbd <path to RAM dump> *<pointer to start address>`
+
+For example `gbd ram.bin 0x801B4100` (disassemble from `0x801B4100`) or `gbd ram.bin *0x8012D260` (disassemble from the address found at `0x8012D260`)
+
 Currently, the only way to use `gbd` is by dumping the contents of RDRAM to a file. `AUTO` can be entered in place of a start address to use the default start address.
 
 ## Building

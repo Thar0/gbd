@@ -15,7 +15,7 @@ file_exists (const char *filename) {
 static int
 usage (char *exec_name)
 {
-    printf("Usage: %s [--print-textures] [--print-vertices] [--print-matrices] <file path> <WORK_DISP start>\n", exec_name);
+    printf("Usage: %s [--print-textures] [--print-vertices] [--print-matrices] <file path> <WORK_DISP start | *ptr to WORK_DISP start>\n", exec_name);
     return -1;
 }
 

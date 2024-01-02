@@ -424,8 +424,8 @@ print_string (gfx_state_t *state, uint32_t str_addr, fprint_fn pfn, FILE *file)
     /* convert string from EUC-JP to UTF-8 */
     cd = iconv_open("UTF-8", "EUC-JP");
 
-    in_bytes_left = str_len;
-    out_bytes_left = 2 * str_len;
+    in_bytes_left = sizeof(char) * str_len;
+    out_bytes_left = sizeof(wchar_t) * str_len;
     iconv_in_buf = in_buf;
     iconv_out_buf = out_buf;
     iconv(cd, &iconv_in_buf, &in_bytes_left, &iconv_out_buf, &out_bytes_left);
@@ -4329,7 +4329,7 @@ analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts,
 
     if (state.rdram->open(rdram_arg))
     {
-        fprintf(print_out, ERROR_COLOR "FAILED to open RDRAM image\n");
+        fprintf(print_out, ERROR_COLOR "FAILED to open RDRAM image" VT_RST "\n");
         goto err;
     }
 
@@ -4338,7 +4338,7 @@ analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts,
         uint32_t auto_start_addr;
         if (!state.rdram->read_at(&auto_start_addr, auto_start_ptr_addr & ~KSEG_MASK, sizeof(uint32_t)))
         {
-            fprintf(print_out, ERROR_COLOR "FAILED to read auto start pointer\n");
+            fprintf(print_out, ERROR_COLOR "FAILED to read auto start pointer" VT_RST "\n");
             goto err;
         }
         start_addr = BSWAP32(auto_start_addr);
@@ -4346,7 +4346,7 @@ analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts,
     start_addr &= ~KSEG_MASK;
     if (!state.rdram->seek(start_addr))
     {
-        fprintf(print_out, ERROR_COLOR "FAILED to seek to start address\n");
+        fprintf(print_out, ERROR_COLOR "FAILED to seek to start address" VT_RST "\n");
         goto err;
     }
     state.gfx_addr = start_addr;
@@ -4436,6 +4436,8 @@ analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts,
         print_segments(print_out, state.segment_table);
 
     }
+
+    fflush(print_out);
 
     // TODO output more information here
     // for verbose outputs, the maximum depth reached on the DL stack might be useful, also

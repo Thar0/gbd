@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "rdram.h"
+#include "libgbd/rdram.h"
 
 /**
  *  RDRAM File Implementation

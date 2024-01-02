@@ -4,7 +4,7 @@
 #include <string.h>
 #include <sys/stat.h>
 
-#include "gbd.h"
+#include "libgbd/gbd.h"
 
 #define strequ(s1, s2) \
     (strcmp((s1), (s2)) == 0)

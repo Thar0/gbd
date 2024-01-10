@@ -399,7 +399,7 @@ print_string (gfx_state_t *state, uint32_t str_addr, fprint_fn pfn, FILE *file)
     iconv_t cd;
     char c;
     char *in_buf, *out_buf, *iconv_in_buf, *iconv_out_buf;
-    size_t in_bytes_left, out_bytes_left;
+    size_t in_bytes_tot, out_bytes_max, in_bytes_left, out_bytes_left;
     size_t str_len = 0;
 
     /* determine the length of the string */
@@ -408,6 +408,12 @@ print_string (gfx_state_t *state, uint32_t str_addr, fprint_fn pfn, FILE *file)
         if (state->rdram->read(&c, sizeof(c), 1) != 1)
             return;
         str_len++;
+
+        if (str_len > 1000) {
+            pfn(file, "/*no \\0 ?*/");
+            str_len = 10;
+            break;
+        }
     } while (c != '\0');
 
     /* open string */
@@ -424,15 +430,17 @@ print_string (gfx_state_t *state, uint32_t str_addr, fprint_fn pfn, FILE *file)
     /* convert string from EUC-JP to UTF-8 */
     cd = iconv_open("UTF-8", "EUC-JP");
 
-    in_bytes_left = sizeof(char) * str_len;
-    out_bytes_left = sizeof(wchar_t) * str_len;
+    in_bytes_tot = sizeof(char) * str_len;
+    out_bytes_max = sizeof(wchar_t) * str_len;
+    in_bytes_left = in_bytes_tot;
+    out_bytes_left = out_bytes_max;
     iconv_in_buf = in_buf;
     iconv_out_buf = out_buf;
     iconv(cd, &iconv_in_buf, &in_bytes_left, &iconv_out_buf, &out_bytes_left);
     iconv_close(cd);
 
     /* print converted string */
-    pfn(file, "%s", out_buf);
+    pfn(file, "%.*s", (int)(out_bytes_max - out_bytes_left), out_buf);
 
 err:
     /* close string */

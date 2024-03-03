@@ -15,9 +15,9 @@
 #include "vt.h"
 
 #ifdef WINDOWS
-# include "libiconv-win/include/iconv.h"
+# include "libiconv/windows/include/iconv.h"
 #else
-# include <iconv.h>
+# include "libiconv/linux/include/iconv.h"
 #endif
 
 #define KSEG_MASK (0b111 << 29)

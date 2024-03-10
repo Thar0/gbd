@@ -21,3 +21,7 @@ Currently, the only way to use `gbd` is by dumping the contents of RDRAM to a fi
 Run `make` to build the program. Building requires [libiconv](https://www.gnu.org/software/libiconv/) to be installed with `--enable-static`. Either install it yourself or run `make libiconv` to install it to `libiconv/linux` in the repository directory. If you would like to install libiconv elsewhere you can override `ICONV_PREFIX` in the Makefile.
 
 Building for windows is also supported. The steps are the same, merely add `TARGET=windows` in the make commands. If running `make libiconv` for windows, it will be installed locally to `libiconv/windows`.
+
+## Formatting
+
+This project uses clang-format, with configuration in `.clang-format`.

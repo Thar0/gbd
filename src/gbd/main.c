@@ -27,7 +27,7 @@ usage (char *exec_name)
            "[--to-line <n>] "
            "[--quiet] "
            "<file path> "
-           "<WORK_DISP start>"
+           "<WORK_DISP start | *<pointer to WORK_DISP start>>"
            "\n", exec_name);
     return -1;
 }
@@ -46,7 +46,7 @@ main (int argc, char **argv)
         { 0x800EA740 /* 0x80113070 */, gfxd_s2dex2 },
         { 0, NULL },
     };
-    // auto start pointer, TODO make configurable
+    // default AUTO start pointer
 #define WORK_DISP_PTR 0x8012D260
 
     gbd_options_t opts = {
@@ -54,7 +54,7 @@ main (int argc, char **argv)
     };
 
     const char *file_name = NULL;
-    uint32_t start_addr;
+    struct start_location_info start_location;
 
     if (argc < 3)
         return usage(argv[0]);
@@ -92,11 +92,30 @@ main (int argc, char **argv)
             if (got_file_name)
             {
                 // start address
-                if (sscanf(argv[i], "0x%8x", &start_addr) != 1)
+
+                if (strequ(argv[i], "AUTO"))
                 {
-                    if (strequ(argv[i], "AUTO"))
-                        start_addr = 0xFFFFFFFF;
+                    start_location.type = USE_START_ADDR_AT_POINTER;
+                    start_location.start_location_ptr = WORK_DISP_PTR;
+                }
+                else
+                {
+                    char *addr_str;
+                    uint32_t *addrp;
+
+                    if (argv[i][0] == '*')
+                    {
+                        start_location.type = USE_START_ADDR_AT_POINTER;
+                        addr_str = &argv[i][1];
+                        addrp = &start_location.start_location_ptr;
+                    }
                     else
+                    {
+                        start_location.type = USE_GIVEN_START_ADDR;
+                        addr_str = argv[i];
+                        addrp = &start_location.start_location;
+                    }
+                    if (sscanf(addr_str, "0x%8x", addrp) != 1)
                     {
                         printf("Bad start address.\n");
                         return -1;
@@ -120,7 +139,7 @@ main (int argc, char **argv)
 
     if (!got_all_args)
         return usage(argv[0]);
-    analyze_gbi(stdout, ucodes, &opts, &rdram_interface_file, file_name, start_addr, WORK_DISP_PTR);
+    analyze_gbi(stdout, ucodes, &opts, &rdram_interface_file, file_name, &start_location);
 
     return 0;
 }

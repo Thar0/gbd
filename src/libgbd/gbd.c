@@ -3,6 +3,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdint.h>
+#include <inttypes.h>
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -15,9 +16,9 @@
 #include "vt.h"
 
 #ifdef WINDOWS
-# include "libiconv-win/include/iconv.h"
+# include "libiconv/windows/include/iconv.h"
 #else
-# include <iconv.h>
+# include "libiconv/linux/include/iconv.h"
 #endif
 
 #define KSEG_MASK (0b111 << 29)
@@ -4289,7 +4290,7 @@ input_callback (void *buf, int count)
 
 int
 analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, rdram_interface_t *rdram,
-             const void *rdram_arg, uint32_t start_addr, uint32_t auto_start_ptr_addr)
+             const void *rdram_arg, struct start_location_info *start_location)
 {
     gfx_state_t state = {
         .task_done = false,
@@ -4333,15 +4334,24 @@ analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts,
         goto err;
     }
 
-    if (start_addr == 0xFFFFFFFF)
+    uint32_t start_addr = -1U;
+    switch (start_location->type)
     {
-        uint32_t auto_start_addr;
-        if (!state.rdram->read_at(&auto_start_addr, auto_start_ptr_addr & ~KSEG_MASK, sizeof(uint32_t)))
-        {
-            fprintf(print_out, ERROR_COLOR "FAILED to read auto start pointer\n");
+        case USE_START_ADDR_AT_POINTER: {
+            uint32_t auto_start_addr;
+            if (!state.rdram->read_at(&auto_start_addr, start_location->start_location_ptr & ~KSEG_MASK, sizeof(uint32_t)))
+            {
+                fprintf(print_out, ERROR_COLOR "FAILED to read start address from pointer 0x%08" PRIx32 "\n", start_location->start_location_ptr);
+                goto err;
+            }
+            start_addr = BSWAP32(auto_start_addr);
+        } break;
+        case USE_GIVEN_START_ADDR: {
+            start_addr = start_location->start_location;
+        } break;
+        default:
+            fprintf(print_out, ERROR_COLOR "FAILED to get start address, unknown type %d\n", (int)start_location->type);
             goto err;
-        }
-        start_addr = BSWAP32(auto_start_addr);
     }
     start_addr &= ~KSEG_MASK;
     if (!state.rdram->seek(start_addr))

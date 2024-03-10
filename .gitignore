@@ -7,5 +7,5 @@ build/**
 # pj64 ram dumps for testing
 tests/**
 
-# libiconv windows
+# libiconv
 libiconv/**

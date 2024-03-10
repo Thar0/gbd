@@ -26,8 +26,21 @@ typedef struct
     int line;
 } gbd_options_t;
 
+enum start_location_type
+{
+    USE_GIVEN_START_ADDR,
+    USE_START_ADDR_AT_POINTER
+};
+
+struct start_location_info
+{
+    enum start_location_type type;
+    uint32_t start_location;
+    uint32_t start_location_ptr;
+};
+
 int
 analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, rdram_interface_t *rdram,
-             const void *rdram_arg, uint32_t start_addr, uint32_t auto_start_ptr_addr);
+             const void *rdram_arg, struct start_location_info *start_location);
 
 #endif

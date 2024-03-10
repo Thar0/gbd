@@ -38,7 +38,7 @@ DEP_FILES := $(O_FILES_LIBGBD:.o=.d) $(O_FILES_GBD:.o=.d)
 
 $(shell mkdir -p $(SRC_DIRS_LIBGBD:%=build/%) $(SRC_DIRS_GBD:%=build/%))
 
-.PHONY: all clean
+.PHONY: all clean libiconv
 .DEFAULT_GOAL := all
 
 all: $(LIBGBD_STATIC) $(LIBGBD_SHARED) $(TARGET_BINARY)
@@ -76,14 +76,13 @@ build/src/%.o: src/%.c
 libiconv:
 ifeq (,$(wildcard $(ICONV)))
 	mkdir -p build/libiconv/build
-ifeq ($(TARGET),windows)
 	mkdir -p $(ICONV_PREFIX)
-endif
-ifeq (,$(wildcard build/libiconv/build/Makefile))
+ ifeq (,$(wildcard build/libiconv/build/Makefile))
 	cd build/libiconv && wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz && tar -xvzf libiconv-1.16.tar.gz
 	cd build/libiconv/build && ../libiconv-1.16/configure --enable-static --prefix=$(ICONV_PREFIX) CC=$(CC) $(ICONV_CFG)
-endif
+ endif
 	$(MAKE) -C build/libiconv/build install-lib
+	$(RM) -rf build/libiconv
 else
 	$(info libiconv.a is already present)
 endif

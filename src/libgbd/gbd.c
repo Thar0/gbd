@@ -9,7 +9,7 @@
 #include <math.h>
 
 #include "gfx.h"
-#include "gbd.h"
+#include "libgbd/gbd.h"
 #include "vector.h"
 #include "obstack.h"
 #include "macros.h"

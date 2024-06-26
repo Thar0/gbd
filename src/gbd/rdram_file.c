@@ -9,31 +9,27 @@
  */
 
 static long
-rdram_file_pos (void);
+rdram_file_pos(void);
 
 static int
-rdram_file_seek (uint32_t addr);
-
-
+rdram_file_seek(uint32_t addr);
 
 static FILE *rdram_file_file;
 static long rdram_file_size;
 
 static int
-rdram_file_close (void)
+rdram_file_close(void)
 {
     return fclose(rdram_file_file);
 }
 
 static int
-rdram_file_open (const void *arg)
+rdram_file_open(const void *arg)
 {
-    int ret;
-
     rdram_file_file = fopen((const char *)arg, "rb");
-    ret = -(rdram_file_file == NULL); // 0 = success, -1 = could not open file
-    if (ret == 0)
-    {
+
+    int ret = -(rdram_file_file == NULL); // 0 = success, -1 = could not open file
+    if (ret == 0) {
         if (fseek(rdram_file_file, 0, SEEK_END))
             return -2; // -2 = could not ascertain size
         rdram_file_size = rdram_file_pos();
@@ -43,19 +39,19 @@ rdram_file_open (const void *arg)
 }
 
 static long
-rdram_file_pos (void)
+rdram_file_pos(void)
 {
     return ftell(rdram_file_file);
 }
 
 static bool
-rdram_file_addr_valid (uint32_t addr)
+rdram_file_addr_valid(uint32_t addr)
 {
     return addr < rdram_file_size;
 }
 
 static size_t
-rdram_file_read (void *buf, size_t elem_size, size_t elem_count)
+rdram_file_read(void *buf, size_t elem_size, size_t elem_count)
 {
     return fread(buf, elem_size, elem_count, rdram_file_file);
 }
@@ -64,7 +60,7 @@ rdram_file_read (void *buf, size_t elem_size, size_t elem_count)
  * Returns true if seek to `addr` was successful.
  */
 static int
-rdram_file_seek (uint32_t addr)
+rdram_file_seek(uint32_t addr)
 {
     return rdram_file_addr_valid(addr) && (fseek(rdram_file_file, addr, SEEK_SET) == 0);
 }
@@ -73,7 +69,7 @@ rdram_file_seek (uint32_t addr)
  * Returns true if read of `size` bytes at `addr` was successful.
  */
 static int
-rdram_file_read_at (void *buf, uint32_t addr, size_t size)
+rdram_file_read_at(void *buf, uint32_t addr, size_t size)
 {
     return rdram_file_seek(addr) && (rdram_file_read(buf, size, 1) == 1);
 }
@@ -82,13 +78,7 @@ rdram_file_read_at (void *buf, uint32_t addr, size_t size)
  *  RDRAM File Interface
  */
 
-rdram_interface_t rdram_interface_file = 
-{
-    rdram_file_close,
-    rdram_file_open,
-    rdram_file_pos,
-    rdram_file_addr_valid,
-    rdram_file_read,
-    rdram_file_seek,
-    rdram_file_read_at,
+rdram_interface_t rdram_interface_file = {
+    rdram_file_close, rdram_file_open, rdram_file_pos,     rdram_file_addr_valid,
+    rdram_file_read,  rdram_file_seek, rdram_file_read_at,
 };

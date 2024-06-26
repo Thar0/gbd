@@ -29,7 +29,9 @@ DEFINE_ERROR(FILLRECT_FILLCOLOR_UNSET, "Filling a rectangle without ever setting
 DEFINE_ERROR(CC_SHADE_INVALID, "Shade used in CC cycle %d %s input when %s")
 DEFINE_ERROR(CC_SHADE_ALPHA_INVALID, "Shade alpha used as blender cycle %d input when %s")
 DEFINE_ERROR(ZS_PIXEL_SET_WITHOUT_G_ZBUFFER, "Per-pixel depth source (G_ZS_PIXEL) is set but G_ZBUFFER is unset")
-DEFINE_ERROR(ZSRC_INVALID, "Per-pixel depth source is only available to triangles, either disable z-buffering or set G_ZS_PRIM in othermodes")
+DEFINE_ERROR(
+    ZSRC_INVALID,
+    "Per-pixel depth source is only available to triangles, either disable z-buffering or set G_ZS_PRIM in othermodes")
 DEFINE_ERROR(CC_COMBINED_IN_C1, "COMBINED input selected for CC 1-Cycle %s")
 DEFINE_ERROR(CC_COMBINED_ALPHA_IN_C1, "COMBINED_ALPHA input selected for CC 1-Cycle RGB")
 DEFINE_ERROR(CC_COMBINED_IN_C2_C1, "COMBINED input selected for CC 2-Cycle Cycle 1 %s")
@@ -42,15 +44,18 @@ DEFINE_ERROR(COPYMODE_AA, "Anti-aliasing is unavailable in COPY mode")
 DEFINE_ERROR(COPYMODE_BL_SET, "Blender pipeline stages are skipped in COPY mode")
 DEFINE_ERROR(COPYMODE_TEXTURE_FILTER, "Texture filtering is unavailable in COPY mode")
 DEFINE_ERROR(TILEDESC_BAD, "bad tile descriptor")
-DEFINE_ERROR(CI_RENDER_TILE_NO_TLUT, "Render tile is color-indexed but TLUT mode was not enabled in other modes before drawing")
-DEFINE_ERROR(NO_CI_RENDER_TILE_TLUT, "Render tile is not color-indexed but TLUT mode was enabled in other modes before drawing")
+DEFINE_ERROR(CI_RENDER_TILE_NO_TLUT,
+             "Render tile is color-indexed but TLUT mode was not enabled in other modes before drawing")
+DEFINE_ERROR(NO_CI_RENDER_TILE_TLUT,
+             "Render tile is not color-indexed but TLUT mode was enabled in other modes before drawing")
 DEFINE_ERROR(COPYMODE_MISMATCH_8B, "4b and 8b images can only be copied to an 8b color image")
 DEFINE_ERROR(COPYMODE_MISMATCH_16B, "16b images can only be copied to a 16b color image")
 DEFINE_ERROR(TRI_VTX_OOB, "triangle %d indexed out of bounds vertices")
 DEFINE_ERROR(BAD_TIMG_ALIGNMENT, "Texture image alignment will hang the RDP")
 DEFINE_ERROR(LOADBLOCK_TOO_MANY_TEXELS, "LoadBlock only allows loading up to 2048 texels")
 DEFINE_ERROR(TIMG_LOAD_4B, "Loading with a 4-bit texture image is unsupported")
-DEFINE_ERROR(TIMG_TILE_LOAD_NONMATCHING, "Texture image and texture tile format/size do not match during load operation")
+DEFINE_ERROR(TIMG_TILE_LOAD_NONMATCHING,
+             "Texture image and texture tile format/size do not match during load operation")
 DEFINE_ERROR(TLUT_TOO_LARGE, "TLUTs can be at most 256 colors")
 DEFINE_ERROR(TLUT_BAD_FMT, "TLUT format should be RGBA16 or IA16")
 DEFINE_ERROR(TLUT_BAD_TMEM_ADDR, "A TLUT must be loaded into the high half of TMEM")
@@ -78,18 +83,34 @@ DEFINE_WARNING(UNSET_SEGMENT, "Using segment %d before it was assigned")
 DEFINE_WARNING(UNK_DL_VARIANT, "Unknown display list command variant, will act as %s")
 DEFINE_WARNING(UNK_NOOP_TAG3, "Unknown gsDPNoOpTag3 variant, possibly garbage data")
 DEFINE_WARNING(CULLING_BAD_VERTS, "Volume culling references vertices that were not loaded in the last batch")
-DEFINE_WARNING(DANGEROUS_TEXTURE_ALIGNMENT, "texture image is not 8-byte aligned; this has the potential to hang the RDP, it is recommended to align textures to 8 bytes")
-DEFINE_WARNING(BLENDER_SET_BUT_UNUSED, "Blend formula is configured however the blender is not used as both AA_EN and FORCE_BL are unset")
-DEFINE_WARNING(BLENDER_STAGES_DIFFER_1CYC, "Blender configuration differs between stages in 1-Cycle mode, first cycle configuration is ignored")
-DEFINE_WARNING(CC_STAGES_DIFFER_1CYC, "Color combiner configuration differs between stages in 1-Cycle mode, first cycle configuration is ignored")
-DEFINE_WARNING(CC_TEXEL1_RGB_1CYC, "TEXEL1 input selected for CC 1-Cycle RGB, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
-DEFINE_WARNING(CC_TEXEL1_ALPHA_1CYC, "TEXEL1 input selected for CC 1-Cycle Alpha, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
+DEFINE_WARNING(DANGEROUS_TEXTURE_ALIGNMENT, "texture image is not 8-byte aligned; this has the potential to hang the "
+                                            "RDP, it is recommended to align textures to 8 bytes")
+DEFINE_WARNING(BLENDER_SET_BUT_UNUSED,
+               "Blend formula is configured however the blender is not used as both AA_EN and FORCE_BL are unset")
+DEFINE_WARNING(BLENDER_STAGES_DIFFER_1CYC,
+               "Blender configuration differs between stages in 1-Cycle mode, first cycle configuration is ignored")
+DEFINE_WARNING(
+    CC_STAGES_DIFFER_1CYC,
+    "Color combiner configuration differs between stages in 1-Cycle mode, first cycle configuration is ignored")
+DEFINE_WARNING(
+    CC_TEXEL1_RGB_1CYC,
+    "TEXEL1 input selected for CC 1-Cycle RGB, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
+DEFINE_WARNING(
+    CC_TEXEL1_ALPHA_1CYC,
+    "TEXEL1 input selected for CC 1-Cycle Alpha, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
 DEFINE_WARNING(CC_TEXEL1_RGBA_1CYC, "TEXEL1_ALPHA input selected for CC 1-Cycle RGB")
-DEFINE_WARNING(CC_TEXEL1_RGB_C2_2CYC, "TEXEL1 input selected for CC Cycle 2 RGB, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
-DEFINE_WARNING(CC_TEXEL1_ALPHA_C2_2CYC, "TEXEL1 input selected for CC Cycle 2 Alpha, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
-DEFINE_WARNING(CC_TEXEL1_RGBA_C2_2CYC, "TEXEL1_ALPHA input selected for CC Cycle 2 RGB, this reads the next pixel TEXEL0_ALPHA instead of the current pixel TEXEL1_ALPHA")
+DEFINE_WARNING(
+    CC_TEXEL1_RGB_C2_2CYC,
+    "TEXEL1 input selected for CC Cycle 2 RGB, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
+DEFINE_WARNING(
+    CC_TEXEL1_ALPHA_C2_2CYC,
+    "TEXEL1 input selected for CC Cycle 2 Alpha, this reads the next pixel TEXEL0 instead of the current pixel TEXEL1")
+DEFINE_WARNING(CC_TEXEL1_RGBA_C2_2CYC, "TEXEL1_ALPHA input selected for CC Cycle 2 RGB, this reads the next pixel "
+                                       "TEXEL0_ALPHA instead of the current pixel TEXEL1_ALPHA")
 DEFINE_WARNING(TRI_LEECHING_VERTS, "triangle %d references vertices that were not loaded in the last batch")
 DEFINE_WARNING(TRI_TXTR_NOPERSP, "Textured triangles rendered without texture perspective correction")
 DEFINE_WARNING(TEX_CI8_NONZERO_PAL, "Palette is non-zero for CI8 tile descriptor, will be treated as 0")
-DEFINE_WARNING(RDP_LOG2_INACCURATE, "The log2 that RDP hardware computes for dz does not agree with the true log2 of dz, inaccuracy may result.")
+DEFINE_WARNING(
+    RDP_LOG2_INACCURATE,
+    "The log2 that RDP hardware computes for dz does not agree with the true log2 of dz, inaccuracy may result.")
 DEFINE_WARNING(TEXRECT_IN_FILLMODE, "Rendering textured rectangles in fill mode act like filled rectangles")

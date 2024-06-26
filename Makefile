@@ -1,12 +1,14 @@
 TARGET ?= linux64
 
+ICONV_VERSION := libiconv-1.16
+
 ifeq ($(TARGET),windows)
 	LIBGBD_STATIC := build/libgbd.lib
 	LIBGBD_SHARED := build/libgbd.dll
 	TARGET_BINARY := build/gbd.exe
 	CC := x86_64-w64-mingw32-gcc
 	DEFS := -D WINDOWS
-	ICONV_PREFIX := $(CURDIR)/libiconv/windows
+	ICONV_PREFIX := libiconv/windows
 	ICONV_CFG := build_libtool_need_lc=no archive_cmds_need_lc=no
 else
 	LIBGBD_STATIC := build/libgbd.a
@@ -14,11 +16,14 @@ else
 	TARGET_BINARY := build/gbd
 	CC := gcc
 	DEFS := -D __LINUX__
-	ICONV_PREFIX := $(CURDIR)/libiconv/linux
+	ICONV_PREFIX := libiconv/linux
 	ICONV_CFG :=
 endif
 
 export
+
+CLANG_FORMAT := clang-format-14
+FORMAT_ARGS := -i -style=file
 
 ICONV := $(ICONV_PREFIX)/lib/libiconv.a
 LIBGFXD := build/libgfxd.a
@@ -38,13 +43,21 @@ DEP_FILES := $(O_FILES_LIBGBD:.o=.d) $(O_FILES_GBD:.o=.d)
 
 $(shell mkdir -p $(SRC_DIRS_LIBGBD:%=build/%) $(SRC_DIRS_GBD:%=build/%))
 
-.PHONY: all clean libiconv
+.PHONY: all clean format libiconv
 .DEFAULT_GOAL := all
 
 all: $(LIBGBD_STATIC) $(LIBGBD_SHARED) $(TARGET_BINARY)
 
 clean:
 	$(RM) -rf build
+
+distclean: clean
+	$(RM) -r $(ICONV_PREFIX)
+
+format:
+	$(CLANG_FORMAT) $(FORMAT_ARGS) $(shell find src -type f -name "*.[ch]")
+
+$(O_FILES_LIBGBD): $(ICONV)
 
 # libgbd for statically linking
 $(LIBGBD_STATIC): $(O_FILES_LIBGBD)
@@ -73,16 +86,17 @@ build/src/%.o: src/%.c
 
 -include $(DEP_FILES)
 
-libiconv:
-ifeq (,$(wildcard $(ICONV)))
-	mkdir -p build/libiconv/build
-	mkdir -p $(ICONV_PREFIX)
- ifeq (,$(wildcard build/libiconv/build/Makefile))
-	cd build/libiconv && wget https://ftp.gnu.org/pub/gnu/libiconv/libiconv-1.16.tar.gz && tar -xvzf libiconv-1.16.tar.gz
-	cd build/libiconv/build && ../libiconv-1.16/configure --enable-static --prefix=$(ICONV_PREFIX) CC=$(CC) $(ICONV_CFG)
- endif
-	$(MAKE) -C build/libiconv/build install-lib
-	$(RM) -rf build/libiconv
-else
-	$(info libiconv.a is already present)
-endif
+libiconv: $(ICONV)
+$(ICONV):
+  ifeq (,$(wildcard libiconv/get/$(ICONV_VERSION)/configure))
+    # Fetch iconv release if not present
+	mkdir -p libiconv/get
+	cd libiconv/get && wget https://ftp.gnu.org/pub/gnu/libiconv/$(ICONV_VERSION).tar.gz && tar -xvzf $(ICONV_VERSION).tar.gz
+  endif
+  ifeq (,$(wildcard $(ICONV_PREFIX)/build/Makefile))
+    # Configure iconv if not already configured (platform-dependent)
+	mkdir -p $(ICONV_PREFIX)/build
+	cd $(ICONV_PREFIX)/build && ../../get/$(ICONV_VERSION)/configure --enable-static --prefix=$(CURDIR)/$(ICONV_PREFIX) CC=$(CC) $(ICONV_CFG)
+  endif
+  # Build & install to $(ICONV_PREFIX)/lib and $(ICONV_PREFIX)/include
+	$(MAKE) -C $(ICONV_PREFIX)/build install-lib

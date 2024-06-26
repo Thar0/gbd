@@ -168,6 +168,8 @@ typedef struct
     uint16_t vtx_depths[VTX_CACHE_SIZE];
     float vtx_w[VTX_CACHE_SIZE];
 
+    int ex3_mat_cull_mode;
+
     // RDP
     tile_descriptor_t tile_descriptors[8];
     struct
@@ -1327,7 +1329,7 @@ segmented_to_physical (gfx_state_t *state, uint32_t addr)
     int num = (addr << 4) >> 28;
     uint8_t num8 = addr >> 24;
 
-    ARG_CHECK(state, state->segment_set_bits & (1 << num), GW_UNSET_SEGMENT);
+    ARG_CHECK(state, state->segment_set_bits & (1 << num), GW_UNSET_SEGMENT, num);
 
     if (num8 != 0x80 && num8 != 0xA0) // allow direct-mapped KSEG addresses
         ARG_CHECK(state, (addr >> 24) < 16, GW_INVALID_SEGMENT_NUM);
@@ -1555,16 +1557,65 @@ chk_SPCullDisplayList (gfx_state_t *state)
 }
 
 static int
+chk_Segment (gfx_state_t *state, int num, uint32_t seg)
+{
+    ARG_CHECK(state, num < 16, GW_INVALID_SEGMENT_NUM);
+    chk_Range(state, seg, sizeof(uint32_t));
+
+    // Check that segment 0 is assigned to 0. In EX3 it's explicitly reserved
+    // while in other ucode versions it's just conventional, so we treat it as
+    // an error in all ucode versions.
+    ARG_CHECK(state, num != 0 || seg == 0, GW_SEGZERO_NONZERO);
+
+    state->segment_table[num] = seg & ~KSEG_MASK;
+    state->segment_set_bits |= (1 << num);
+    return 0;
+}
+
+static int
 chk_SPSegment (gfx_state_t *state)
 {
     int num      = gfxd_arg_value(0)->u;
     uint32_t seg = gfxd_arg_value(1)->u;
 
-    ARG_CHECK(state, num < 16, GW_INVALID_SEGMENT_NUM);
-    chk_Range(state, seg, sizeof(uint32_t));
+    return chk_Segment(state, num, seg);
+}
 
-    state->segment_table[num] = seg & ~KSEG_MASK;
-    state->segment_set_bits |= (1 << num);
+static int
+chk_SPRelSegment (gfx_state_t *state)
+{
+    int num         = gfxd_arg_value(0)->u;
+    uint32_t relseg = gfxd_arg_value(1)->u;
+
+    unsigned relnum = (relseg << 4) >> 28;
+    uint8_t relnum8 = relseg >> 24;
+    uint32_t reloff = relseg & 0xFFFFFF;
+
+    if (relnum8 != 0x80 && relnum8 != 0xA0) // allow direct-mapped KSEG addresses
+        ARG_CHECK(state, relnum8 < 16, GW_INVALID_SEGMENT_NUM_REL);
+
+    ARG_CHECK(state, state->segment_set_bits & (1 << relnum), GW_UNSET_SEGMENT, relnum);
+
+    uint32_t seg = state->segment_table[relnum] + reloff;
+    return chk_Segment(state, num, seg);
+}
+
+static int
+chk_SPMemset (gfx_state_t *state)
+{
+    uint32_t addr  = gfxd_arg_value(0)->u;
+    uint16_t value = gfxd_arg_value(1)->u;
+    uint32_t size  = gfxd_arg_value(2)->u;
+
+    // Value must be 16-bit
+    // Size must be a multiple of 16 and 24-bit
+
+    // Address can be segmented
+    uint32_t addr_phys = segmented_to_physical(state, addr);
+
+    // Check DRAM range valid
+    chk_Range(state, addr_phys, size);
+
     return 0;
 }
 
@@ -1826,6 +1877,17 @@ chk_DPSetTextureImage (gfx_state_t *state)
     chk_Range(state, timg_phys, 0);
 
     ARG_CHECK(state, (timg_phys % 8) == 0, GW_DANGEROUS_TEXTURE_ALIGNMENT);
+
+    // EX3 material culling
+    if (state->next_ucode == gfxd_f3dex3)
+    {
+        if (state->last_timg.addr != timg_phys) {
+            state->ex3_mat_cull_mode = 1;
+        } else {
+            Note(gfxd_vprintf, "Texture image is the same as the previous, may cull loading");
+            state->ex3_mat_cull_mode = -3;
+        }
+    }
 
     state->last_timg.fmt = fmt;
     state->last_timg.siz = siz;
@@ -2934,7 +2996,9 @@ chk_scissor (gfx_state_t *state, int mode, qu102_t ulx, qu102_t uly, qu102_t lrx
 {
     state->scissor_set = true;
 
+    // TODO scissor bounds change based on cycle type
     ARG_CHECK(state, lrx > ulx && lry > uly, GW_SCISSOR_REGION_EMPTY);
+    // TODO fill/copy scissor is deranged
 
     state->scissor.ulx = ulx;
     state->scissor.uly = uly;
@@ -3751,8 +3815,16 @@ chk_LTB (gfx_state_t *state, uint32_t timg, int fmt, int siz, int width, int hei
 
     int mlines = max_lines(width, siz);
 
+    // For LTB, not all width-height combinations are valid for loading. Check that the load is not corrupted.
     ARG_CHECK(state, mlines > 0, GW_LTB_INVAID_WIDTH);
     ARG_CHECK(state, mlines >= height, GW_LTB_DXT_CORRUPTION);
+
+    // For LTB, the number of bytes in a (render tile) line must be an integral number of TMEM words since there is no
+    // line padding performed when loading.
+    // e.g. fmt=I siz=8b width=4 is invalid since (4*8)/8 is not a multiple of 8 
+    int bytes_per_render_line = (width * G_SIZ_BITS(siz)) / 8;
+    ARG_CHECK(state, bytes_per_render_line % 8 == 0, GW_LTB_INVAID_WIDTH);
+
 
     // ARG_CHECK(state, mlines, "Invalid width for LoadTextureBlock");
     // // TODO this needs fixing and promoting to an error
@@ -3812,7 +3884,7 @@ chk_DPLoadTextureBlock_4b (gfx_state_t *state)
  *  Run
  */
 
-static chk_fn chk_tbl[158] = {
+static chk_fn chk_tbl[] = {
     [gfxd_Invalid]                  = chk_Invalid,
     [gfxd_DPFillRectangle]          = chk_DPFillRectangle,
     [gfxd_DPFullSync]               = chk_DPFullSync,
@@ -3941,6 +4013,7 @@ static chk_fn chk_tbl[158] = {
     [gfxd_SPSetOtherModeHi]         = chk_SPSetOtherModeHi,
     [gfxd_DPSetOtherMode]           = chk_DPSetOtherMode,
     [gfxd_MoveWd]                   = chk_MoveWd,
+    [gfxd_MoveHalfWd]               = chk_MoveWd,
     [gfxd_MoveMem]                  = chk_MoveMem,
     [gfxd_SPDma_io]                 = chk_SPDma_io,
     [gfxd_SPDmaRead]                = chk_SPDmaRead,
@@ -3971,6 +4044,10 @@ static chk_fn chk_tbl[158] = {
     [gfxd_SPSelectBranchDL]         = chk_SPSelectBranchDL,
     [gfxd_DPHalf0]                  = chk_DPHalf0,
     [gfxd_SPSetStatus]              = chk_SPSetStatus,
+
+    // F3DEX3
+    [gfxd_SPRelSegment]             = chk_SPRelSegment,
+    [gfxd_SPMemset]                 = chk_SPMemset,
 };
 
 #define STRING_COLOR VT_RGB256COL(130) //VT_SGR("0;92") // green
@@ -4010,6 +4087,7 @@ arg_handler (int arg_num)
         case gfxd_Ucdata:
         case gfxd_Lookatptr:
         case gfxd_Segptr:
+        case gfxd_RelSegptr:
         case gfxd_Lightsn:
         case gfxd_Lightptr:
         case gfxd_Vtxptr:
@@ -4307,10 +4385,13 @@ analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts,
 
         .last_gfx_pkt_count = 1,
 
+        .segment_table[0] = 0,
         .segment_set_bits = 1,
         .matrix_stack_depth = 0,
         .matrix_projection_set = false,
         .matrix_modelview_set = false,
+
+        .ex3_mat_cull_mode = 0,
 
         .sp_dram_stack_size = 0x400, // TODO this is configurable
 
@@ -4398,11 +4479,11 @@ analyze_gbi (FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts,
     gfxd_endian(gfxd_endian_big, 4);
     gfxd_macro_fn(macro_fn);
 
-    state.next_ucode = gfxd_f3dex2;
-    gfxd_target(gfxd_f3dex2);
+    state.next_ucode = state.ucodes[0].ucode;
+    gfxd_target(state.next_ucode);
 
     state.n_gfx = 0;
-    while (!state.task_done /* && !state.pipeline_crashed */ && gfxd_execute() == 1)
+    while (!state.task_done && !state.pipeline_crashed && gfxd_execute() == 1)
     {
         state.n_gfx++;
         state.gfx_addr += state.last_gfx_pkt_count * sizeof(Gfx);

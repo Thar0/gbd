@@ -51,11 +51,11 @@ $(LIBGBD_STATIC): $(O_FILES_LIBGBD)
 	$(AR) rcs $@ $^
 
 # libgbd for dynamically linking
-$(LIBGBD_SHARED): $(O_FILES_LIBGBD) $(ICONV) $(LIBGFXD)
+$(LIBGBD_SHARED): $(O_FILES_LIBGBD) $(LIBGFXD) $(ICONV)
 	$(CC) -shared $^ -o $@
 
 # gbd front-end
-$(TARGET_BINARY): $(O_FILES_GBD) $(ICONV) $(LIBGFXD) $(LIBGBD_STATIC)
+$(TARGET_BINARY): $(O_FILES_GBD) $(LIBGBD_STATIC) $(LIBGFXD) $(ICONV)
 	$(CC) $^ -o $@
 
 # -fPIC is required to make a shared library,

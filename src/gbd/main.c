@@ -32,21 +32,17 @@ usage (char *exec_name)
     return -1;
 }
 
-// crash-mtxstack.bin is 0x184780
-// disappearing_glow.bin is 0x183FC0
-// wtf2.bin is 0x184A00
-
 int
 main (int argc, char **argv)
 {
-    /* MQ Debug ROM locations for ucodes, TODO make configurable */
+    /* MQ debug ROM ucodes, TODO make ucodes externally configurable */
     gfx_ucode_registry_t ucodes[] =
     {
-        { 0x80128FF0 /* 0x80155F50 */, gfxd_f3dex2 },
-        { 0x800EA740 /* 0x80113070 */, gfxd_s2dex2 },
+        { 0x80155F50, gfxd_f3dex2 },
+        { 0x80113070, gfxd_s2dex2 },
         { 0, NULL },
     };
-    // default AUTO start pointer
+    // default AUTO start pointer (MQ debug sPrevTaskWorkBuffer)
 #define WORK_DISP_PTR 0x8012D260
 
     gbd_options_t opts = {

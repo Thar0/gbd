@@ -2059,6 +2059,10 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
                 ARG_CHECK(state, !(state->bl.m1b_c2 == G_BL_A_SHADE), GW_CC_SHADE_ALPHA_INVALID, 2, errmsg);
             }
         }
+
+        // If cvg_dst is set to SAVE, IM_RD should also be enabled otherwise it behaves as if it were just set to FULL
+        if ((rm & CVG_DST_MASK) == CVG_DST_SAVE)
+            ARG_CHECK(state, rm & IM_RD, GW_CVG_SAVE_NO_IM_RD);
     }
 
     uint32_t zsrc = OTHERMODE_VAL(state, lo, ZSRCSEL);

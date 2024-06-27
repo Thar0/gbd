@@ -114,3 +114,4 @@ DEFINE_WARNING(
     RDP_LOG2_INACCURATE,
     "The log2 that RDP hardware computes for dz does not agree with the true log2 of dz, inaccuracy may result.")
 DEFINE_WARNING(TEXRECT_IN_FILLMODE, "Rendering textured rectangles in fill mode act like filled rectangles")
+DEFINE_WARNING(CVG_SAVE_NO_IM_RD, "cvg_dst mode set to SAVE but IM_RD is not set, will behave as if cvg_dst was set to FULL")

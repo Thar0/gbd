@@ -59,8 +59,11 @@ clean-all:
 distclean: clean-all
 	$(RM) -r $(ICONV_PREFIX)
 
+FORMAT_FILES := $(shell find src -type f -name "*.[ch]")
 format:
-	$(CLANG_FORMAT) $(FORMAT_ARGS) $(shell find src -type f -name "*.[ch]")
+	$(CLANG_FORMAT) $(FORMAT_ARGS) $(FORMAT_FILES)
+# Add missing newlines
+	$(foreach f,$(FORMAT_FILES),$(shell [ -n "$$(tail -c1 $f)" ] && printf '\n' >> $f))
 
 $(O_FILES_LIBGBD): $(ICONV)
 

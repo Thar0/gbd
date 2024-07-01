@@ -118,6 +118,7 @@ typedef struct {
 typedef struct {
     uint32_t str_addr;
     int line_no;
+    int dl_stack_top;
 } DispEntry;
 
 #define VTX_CACHE_SIZE 32
@@ -1443,6 +1444,10 @@ chk_SPCullDisplayList(gfx_state_t *state)
     // Skip emulation if vertices are bad
     if (state->pipeline_crashed)
         return -1;
+
+    // Skip emulation if we force culling to always fail
+    if (state->options->no_volume_cull)
+        return 0;
 
     int check = CLIP_ALL;
 
@@ -2992,9 +2997,16 @@ chk_SPBranchLessZraw(gfx_state_t *state)
 
     chk_Range(state, branchdl_phys, sizeof(Gfx));
 
+    // Don't follow the depth branch ever
+    if (state->options->all_depth_cull)
+        return 0;
+
     // TODO this can be either a comparison with w or depth depending on whether the ucode is ZEX or not
     // if (vtx_depths[vtx] > 0x03FF || vtx_depths[vtx] <= zval)
-    if (state->vtx_w[vtx] < (float)zval) {
+    bool branch_success = state->vtx_w[vtx] < (float)zval;
+
+    // If we always take depth branches or the branch succeeded, follow it
+    if (state->options->no_depth_cull || branch_success) {
         Note(gfxd_vprintf, "BranchLessZ success");
         state->gfx_addr = branchdl_phys - sizeof(Gfx);
     }
@@ -4107,18 +4119,27 @@ decode_noop_cmd(gfx_state_t *state)
             print_string(state, segmented_to_physical(state, noop_data->u), gfx_fprintf_wrapper, NULL);
             gfxd_printf(VT_RST ", %d)", noop_data1->u);
 
-            DispEntry open_ent = {
-                .str_addr = segmented_to_physical(state, noop_data->u),
-                .line_no  = noop_data1->u,
-            };
-            obstack_push(&state->disp_stack, &open_ent);
+            {
+                DispEntry disp_ent = {
+                    .str_addr     = segmented_to_physical(state, noop_data->u),
+                    .line_no      = noop_data1->u,
+                    .dl_stack_top = state->dl_stack_top,
+                };
+                obstack_push(&state->disp_stack, &disp_ent);
+            }
             break;
         case 8:
             gfxd_printf(VT_FGCOL(RED) "gsDPNoOpCloseDisp" VT_RST "(" STRING_COLOR);
             print_string(state, segmented_to_physical(state, noop_data->u), gfx_fprintf_wrapper, NULL);
             gfxd_printf(VT_RST ", %d)", noop_data1->u);
 
-            obstack_pop(&state->disp_stack, 1);
+            {
+                DispEntry *disp_ent = (DispEntry *)obstack_peek(&state->disp_stack);
+                if (disp_ent->dl_stack_top != state->dl_stack_top)
+                    WARNING_ERROR(state, GW_UNMATCHED_DISP);
+                else
+                    obstack_pop(&state->disp_stack, 1);
+            }
             break;
         default:
         emit_noop_tag3:
@@ -4377,7 +4398,7 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
         state.gfx_addr += state.last_gfx_pkt_count * sizeof(Gfx);
         gfxd_target(state.next_ucode);
 
-        if (state.options->line != 0 && state.n_gfx == state.options->line) {
+        if (state.options->to_num != 0 && state.n_gfx == state.options->to_num) {
             state.task_done = true;
             break;
         }
@@ -4400,8 +4421,8 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
             if (state.dl_stack_top > 0) {
                 // print a display list stack trace if more than 1 dl deep
                 fprintf(print_out, "Stack Trace:\n");
-                for (int i = state.dl_stack_top; i > 0; i--)
-                    fprintf(print_out, "    %08X\n", state.dl_stack[i]);
+                for (int i = state.dl_stack_top; i >= 0; i--)
+                    fprintf(print_out, "    0x%08X\n", state.dl_stack[i]);
             }
         }
 

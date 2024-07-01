@@ -23,7 +23,12 @@ typedef struct
     bool print_multi_packet;
     bool hex_color;
     bool q_macros;
-    int line;
+
+    int to_num; // Runs to command number and stops
+
+    bool no_volume_cull; // Forces SPCullDisplayList to always fail
+    bool no_depth_cull;  // Forces SPBranchLessZ to always succeed
+    bool all_depth_cull; // Forces SPBranchLessZ to always fail
 } gbd_options_t;
 
 enum start_location_type

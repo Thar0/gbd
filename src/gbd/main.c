@@ -74,8 +74,8 @@ main(int argc, char **argv)
         // TODO formatting options:
         //  - display list stack indentation
         //  - hide empty display lists
-        else if (strequ(argv[i], "--to-line")) {
-            if (i + 1 >= argc || sscanf(argv[i + 1], "%d", &opts.line) != 1)
+        else if (strequ(argv[i], "--to-num")) {
+            if (i + 1 >= argc || sscanf(argv[i + 1], "%d", &opts.to_num) != 1)
                 return usage(argv[0]);
             i++;
         } else {

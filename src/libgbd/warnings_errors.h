@@ -73,6 +73,7 @@ DEFINE_ERROR(TRI_IN_FILLMODE, "Rendering triangles in fillmode is very likely to
 DEFINE_ERROR(LTB_INVAID_WIDTH, "Load texture block invalid width")
 DEFINE_ERROR(LTB_DXT_CORRUPTION, "Load texture block dxt corruption")
 DEFINE_ERROR(FULLSYNC_SENT, "DPFullSync should always be the last RDP command executed in a task")
+DEFINE_ERROR(UNMATCHED_DISP, "Unmatched CloseDisps")
 DEFINE_WARNING(MISSING_PIPESYNC, "Missing pipesync")
 DEFINE_WARNING(MISSING_LOADSYNC, "Missing loadsync")
 DEFINE_WARNING(MISSING_TILESYNC, "Missing tilesync")
@@ -116,4 +117,6 @@ DEFINE_WARNING(
 DEFINE_WARNING(TEXRECT_IN_FILLMODE, "Rendering textured rectangles in fill mode act like filled rectangles")
 DEFINE_WARNING(CVG_SAVE_NO_IM_RD,
                "cvg_dst mode set to SAVE but IM_RD is not set, will behave as if cvg_dst was set to FULL")
-DEFINE_WARNING(CI_CIMG_FMTSIZ, "CI8 is technically invalid for color images, it behaves the same as I8 which better describes the behavior")
+DEFINE_WARNING(
+    CI_CIMG_FMTSIZ,
+    "CI8 is technically invalid for color images, it behaves the same as I8 which better describes the behavior")

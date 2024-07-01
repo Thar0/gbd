@@ -2406,8 +2406,9 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
             ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1), GW_CC_COMBINED_ALPHA_IN_C2_C1);
 
             // warn about using the COMBINED input in the C slot specifically
-            ARG_CHECK(state, state->cc.c1 != G_CCMUX_COMBINED && state->cc.c1 != G_CCMUX_COMBINED_ALPHA,
-                      GW_CC_COMBINED_IN_C_SLOT);
+            // TODO this warning is just far too common..
+            // ARG_CHECK(state, state->cc.c1 != G_CCMUX_COMBINED && state->cc.c1 != G_CCMUX_COMBINED_ALPHA,
+            //           GW_CC_COMBINED_IN_C_SLOT);
 
             // check cc does not use TEXEL1 input in the second cycle
             ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL1_RGB_C2_2CYC);
@@ -2484,8 +2485,9 @@ chk_DPFillTriangle(gfx_state_t *state, int tnum, int v0, int v1, int v2, int fla
         // TODO this is often OK and even wanted for optimized rendering, this should be changed to use a stack-based
         // approach i.e. if a DL loads vertices and renders with them before returning and then those verts are used
         // again without a reload, that should be flagged.
-        ARG_CHECK(state, v0 < last_loaded_vtx_num && v1 < last_loaded_vtx_num && v2 < last_loaded_vtx_num,
-                  GW_TRI_LEECHING_VERTS, tnum);
+        // Disable the check for now, it's far too common.
+        // ARG_CHECK(state, v0 < last_loaded_vtx_num && v1 < last_loaded_vtx_num && v2 < last_loaded_vtx_num,
+        //           GW_TRI_LEECHING_VERTS, tnum);
     }
 
     if (state->render_tile_on) {
@@ -4754,8 +4756,8 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
 
             if (state.hit_invalid) {
                 fprintf(print_out,
-                        WARNING_COLOR
-                        "Display list call at 0x%08X likely jumped to an invalid or wrong segment pointer\n" VT_RST,
+                        ERROR_COLOR
+                        "\nDisplay list call at 0x%08X likely jumped to an invalid or wrong segment pointer\n" VT_RST,
                         cur_dl_ra);
             }
         }

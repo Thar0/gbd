@@ -51,26 +51,43 @@ bl_decode(struct bl_conf *out, uint32_t rm)
 }
 
 struct cc_conf {
-    // cycle 1 rgb
-    uint8_t a0;
-    uint8_t b0;
-    uint8_t c0;
-    uint8_t d0;
-    // cycle 1 alpha
-    uint8_t Aa0;
-    uint8_t Ab0;
-    uint8_t Ac0;
-    uint8_t Ad0;
-    // cycle 2 rgb
-    uint8_t a1;
-    uint8_t b1;
-    uint8_t c1;
-    uint8_t d1;
-    // cycle 2 alpha
-    uint8_t Aa1;
-    uint8_t Ab1;
-    uint8_t Ac1;
-    uint8_t Ad1;
+    union {
+        struct {
+            // cycle 1 rgb
+            uint8_t a0;
+            uint8_t b0;
+            uint8_t c0;
+            uint8_t d0;
+            // cycle 1 alpha
+            uint8_t Aa0;
+            uint8_t Ab0;
+            uint8_t Ac0;
+            uint8_t Ad0;
+            // cycle 2 rgb
+            uint8_t a1;
+            uint8_t b1;
+            uint8_t c1;
+            uint8_t d1;
+            // cycle 2 alpha
+            uint8_t Aa1;
+            uint8_t Ab1;
+            uint8_t Ac1;
+            uint8_t Ad1;
+        };
+        struct {
+            // cycle n rgb
+            uint8_t a;
+            uint8_t b;
+            uint8_t c;
+            uint8_t d;
+            // cycle n alpha
+            uint8_t Aa;
+            uint8_t Ab;
+            uint8_t Ac;
+            uint8_t Ad;
+        } cyc[2];
+        uint8_t cc[4][2][2];
+    };
 };
 
 static void
@@ -545,6 +562,130 @@ tex_siz_str(unsigned int siz)
         return ERROR_COLOR "INVALID VALUE" VT_RST;
     return names[siz];
 }
+
+/*********************************************************************************************************************\
+ * Color Combiner Inputs
+ *
+ * SLOT A
+ *
+ *     0             1             2                3            4          5             6              7
+ * C:  COMBINED      TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   1              NOISE
+ *     ----------------------------------------------------------------------------------------------------------------
+ *     8             9             10               11           12         13            14             15
+ * C:  0             0             0                0            0          0             0              0
+ * ____________________________________________________________________________________________________________________
+ *     0             1             2                3            4          5             6              7
+ * A:  COMBINED      TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   1              0
+ *
+ *
+ * SLOT B
+ *
+ *     0             1             2                3            4          5             6              7
+ * C:  COMBINED      TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   CENTER         K4
+ *     ----------------------------------------------------------------------------------------------------------------
+ *     8             9             10               11           12         13            14             15
+ * C:  0             0             0                0            0          0             0              0
+ * ____________________________________________________________________________________________________________________
+ *     0             1             2                3            4          5             6              7
+ * A:  COMBINED      TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   1              0
+ *
+ *
+ * SLOT C
+ *
+ *     0             1             2                3            4          5             6              7
+ * C:  COMBINED      TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   CENTER         COMBINED_ALPHA
+ *     ----------------------------------------------------------------------------------------------------------------
+ *     16            17            18               19           20         21            22             23
+ * C:  TEXEL0_ALPHA  TEXEL1_ALPHA  PRIMITIVE_ALPHA  SHADE_ALPHA  ENV_ALPHA  LOD_FRACTION  PRIM_LOD_FRAC  K5
+ *     ----------------------------------------------------------------------------------------------------------------
+ *     8             9             10               11           12         13            14             15
+ * C:  0             0             0                0            0          0             0              0
+ *     ----------------------------------------------------------------------------------------------------------------
+ *     24            25            26               27           28         29            30             31
+ * C:  0             0             0                0            0          0             0              0
+ * ____________________________________________________________________________________________________________________
+ *     0             1             2                3            4          5             6              7
+ * A:  LOD_FRACTION  TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   PRIM_LOD_FRAC  0
+ *
+ *
+ * SLOT D
+ *
+ *     0             1             2                3            4          5             6              7
+ * C:  COMBINED      TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   1              0
+ * ____________________________________________________________________________________________________________________
+ *     0             1             2                3            4          5             6              7
+ * A:  COMBINED      TEXEL0        TEXEL1           PRIMITIVE    SHADE      ENVIRONMENT   1              0
+ *
+\*********************************************************************************************************************/
+
+// Each bit in the bitmask corresponds to whether the input is valid in the combiner slot.
+// [3] = Slot A
+// [2] = Slot B
+// [1] = Slot C
+// [0] = Slot D
+
+// Value 0
+#define CC_C_COMBINED_BITPATTERN        0b1111
+#define CC_A_COMBINED_BITPATTERN        0b1101
+#define CC_C_LOD_FRACTION_BITPATTERN    0b0010
+#define CC_A_LOD_FRACTION_BITPATTERN    0b0010
+// Value 1
+#define CC_C_TEXEL0_BITPATTERN          0b1111
+#define CC_A_TEXEL0_BITPATTERN          0b1111
+// Value 2
+#define CC_C_TEXEL1_BITPATTERN          0b1111
+#define CC_A_TEXEL1_BITPATTERN          0b1111
+// Value 3
+#define CC_C_PRIMITIVE_BITPATTERN       0b1111
+#define CC_A_PRIMITIVE_BITPATTERN       0b1111
+// Value 4
+#define CC_C_SHADE_BITPATTERN           0b1111
+#define CC_A_SHADE_BITPATTERN           0b1111
+// Value 5
+#define CC_C_ENVIRONMENT_BITPATTERN     0b1111
+#define CC_A_ENVIRONMENT_BITPATTERN     0b1111
+// Value 6
+#define CC_C_1_BITPATTERN               0b1001
+#define CC_A_1_BITPATTERN               0b1101
+#define CC_C_CENTER_BITPATTERN          0b0110
+#define CC_A_CENTER_BITPATTERN          0b0000
+#define CC_C_PRIM_LOD_FRAC_BITPATTERN   0b0010 // also value 14
+#define CC_A_PRIM_LOD_FRAC_BITPATTERN   0b0010
+// Value 7
+#define CC_C_NOISE_BITPATTERN           0b1000
+#define CC_A_NOISE_BITPATTERN           0b0000
+#define CC_C_K4_BITPATTERN              0b0100
+#define CC_A_K4_BITPATTERN              0b0000
+#define CC_C_COMBINED_ALPHA_BITPATTERN  0b0000
+#define CC_A_COMBINED_ALPHA_BITPATTERN  0b0010
+// Value 8+
+#define CC_C_TEXEL0_ALPHA_BITPATTERN    0b0010
+#define CC_C_TEXEL1_ALPHA_BITPATTERN    0b0010
+#define CC_C_PRIMITIVE_ALPHA_BITPATTERN 0b0010
+#define CC_C_SHADE_ALPHA_BITPATTERN     0b0010
+#define CC_C_ENV_ALPHA_BITPATTERN       0b0010
+#define CC_C_LOD_FRACTION_BITPATTERN    0b0010
+#define CC_C_PRIM_LOD_FRAC_BITPATTERN   0b0010
+#define CC_C_K5_BITPATTERN              0b0010
+// Values 7-31, varying
+#define CC_C_0_BITPATTERN               0b1111
+#define CC_A_0_BITPATTERN               0b1111
+
+#define CCBITMASK(n) ((1 << (n)) - 1)
+
+// FIXME won't work for all possible encodings of the 0 input
+#define CC_C_HAS(cc, input, clk)                                                                        \
+    ((((CC_C_##input##_BITPATTERN) & (1 << 3)) && (cc)->a##clk == (G_CCMUX_##input & CCBITMASK(4))) ||  \
+     (((CC_C_##input##_BITPATTERN) & (1 << 2)) && (cc)->b##clk == (G_CCMUX_##input & CCBITMASK(4))) ||  \
+     (((CC_C_##input##_BITPATTERN) & (1 << 1)) && (cc)->c##clk == (G_CCMUX_##input & CCBITMASK(5))) ||  \
+     (((CC_C_##input##_BITPATTERN) & (1 << 0)) && (cc)->d##clk == (G_CCMUX_##input & CCBITMASK(3))))
+
+// FIXME won't work for all possible encodings of the 0 input
+#define CC_A_HAS(cc, input, clk)                                                                        \
+    ((((CC_A_##input##_BITPATTERN) & (1 << 3)) && (cc)->Aa##clk == (G_ACMUX_##input & CCBITMASK(3))) || \
+     (((CC_A_##input##_BITPATTERN) & (1 << 2)) && (cc)->Ab##clk == (G_ACMUX_##input & CCBITMASK(3))) || \
+     (((CC_A_##input##_BITPATTERN) & (1 << 1)) && (cc)->Ac##clk == (G_ACMUX_##input & CCBITMASK(3))) || \
+     (((CC_A_##input##_BITPATTERN) & (1 << 0)) && (cc)->Ad##clk == (G_ACMUX_##input & CCBITMASK(3))))
 
 static const char *
 cc_str(unsigned int v, int i)
@@ -2089,12 +2230,6 @@ enum prim_type {
 #define BL_CYC_IS_SET(bl, clk) \
     ((bl)->m1a_c##clk != 0 || (bl)->m1b_c##clk != 0 || (bl)->m2a_c##clk != 0 || (bl)->m2b_c##clk != 0)
 
-#define CC_C_HAS(cc, input, clk) \
-    ((cc)->a##clk == (input) || (cc)->b##clk == (input) || (cc)->c##clk == (input) || (cc)->d##clk == (input))
-
-#define CC_A_HAS(cc, input, clk) \
-    ((cc)->Aa##clk == (input) || (cc)->Ab##clk == (input) || (cc)->Ac##clk == (input) || (cc)->Ad##clk == (input))
-
 static int
 chk_render_tile(gfx_state_t *state, int tile)
 {
@@ -2112,18 +2247,22 @@ chk_render_tile(gfx_state_t *state, int tile)
         if (was_set) {
             // If the tile was set, validate its properties
 
+            // Check format against tlut_en othermode
             if (tile_desc->fmt == G_IM_FMT_CI)
                 ARG_CHECK(state, tlut_en, GW_CI_RENDER_TILE_NO_TLUT, tile);
             else
                 ARG_CHECK(state, !tlut_en, GW_NO_CI_RENDER_TILE_TLUT, tile);
 
             if (cycle_type == G_CYC_COPY) {
-                if (state->last_cimg.siz != G_IM_SIZ_8b)
-                    ARG_CHECK(state, tile_desc->siz != G_IM_SIZ_4b && tile_desc->siz != G_IM_SIZ_8b,
+                // Copy mode tile bit depth should match color image bit depth, CI textures are valid for 16-bit since
+                // the palette is 16-bit
+
+                if (state->last_cimg.siz == G_IM_SIZ_8b)
+                    ARG_CHECK(state, tile_desc->siz == G_IM_SIZ_4b && tile_desc->siz == G_IM_SIZ_8b,
                               GW_COPYMODE_MISMATCH_8B);
 
                 if (state->last_cimg.siz == G_IM_SIZ_16b)
-                    ARG_CHECK(state, tile_desc->siz == G_IM_SIZ_16b, GW_COPYMODE_MISMATCH_16B);
+                    ARG_CHECK(state, tile_desc->fmt == G_IM_FMT_CI || tile_desc->siz == G_IM_SIZ_16b, GW_COPYMODE_MISMATCH_16B);
             }
         }
     }
@@ -2137,7 +2276,8 @@ chk_render_tile(gfx_state_t *state, int tile)
 static int
 chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
 {
-    bool uses_texel1 = false;
+    bool uses_tile0 = false;
+    bool uses_tile1 = false;
 
     uint32_t rm    = OTHERMODE_VAL(state, lo, RENDERMODE);
     int cycle_type = OTHERMODE_VAL(state, hi, CYCLETYPE);
@@ -2155,36 +2295,52 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
     ARG_CHECK(state, blend_en || !(bl_c1_set || bl_c2_set), GW_BLENDER_SET_BUT_UNUSED);
 
     if (cycle_type == G_CYC_FILL) {
+        // In fill mode, tris and texrects generally shouldn't be used
         ARG_CHECK(state, prim_type != PRIM_TYPE_TRI, GW_TRI_IN_FILLMODE);
         ARG_CHECK(state, prim_type != PRIM_TYPE_TEXRECT, GW_TEXRECT_IN_FILLMODE);
 
-        if (prim_type == PRIM_TYPE_FILLRECT)
-            ARG_CHECK(state, state->fill_color_set, GW_FILLRECT_FILLCOLOR_UNSET);
+        // Fill color is the only source of color in fill mode, it had better be set
+        ARG_CHECK(state, state->fill_color_set, GW_FILLRECT_FILLCOLOR_UNSET);
     }
 
     if (cycle_type != G_CYC_FILL && cycle_type != G_CYC_COPY) {
         // Check SHADE inputs
-        // Fillrect doesn't seem to care about any of this
-        if (prim_type != PRIM_TYPE_FILLRECT) {
-            // If G_SHADE is unset shade coefficients are not generated for RDP triangles, so shade inputs to CC and BL
-            // are prohibited as they will read garbage
-            if (prim_type == PRIM_TYPE_TEXRECT || !(state->geometry_mode & G_SHADE)) {
-                const char *errmsg = (prim_type == PRIM_TYPE_TEXRECT) ? "rendering textured rectangle"
-                                                                      : "G_SHADE not set in geometry mode";
+        // If G_SHADE is unset shade coefficients are not generated for RDP triangles, so shade inputs to CC and BL
+        // are prohibited as they will read garbage. Also when rendering any rectangle primitives there should be no
+        // use of the SHADE input as there is no way to provide coefficients in that case.
+        bool is_rect = prim_type == PRIM_TYPE_TEXRECT || prim_type == PRIM_TYPE_FILLRECT;
 
-                ARG_CHECK(state, !CC_C_HAS(&state->cc, G_CCMUX_SHADE, 0) && !(state->cc.c0 == G_CCMUX_SHADE_ALPHA),
-                          GW_CC_SHADE_INVALID, 1, "RGB", errmsg);
-                ARG_CHECK(state, !CC_A_HAS(&state->cc, G_ACMUX_SHADE, 0), GW_CC_SHADE_INVALID, 1, "Alpha", errmsg);
-                ARG_CHECK(state, !CC_C_HAS(&state->cc, G_CCMUX_SHADE, 1) && !(state->cc.c1 == G_CCMUX_SHADE_ALPHA),
-                          GW_CC_SHADE_INVALID, 2, "RGB", errmsg);
-                ARG_CHECK(state, !CC_A_HAS(&state->cc, G_ACMUX_SHADE, 1), GW_CC_SHADE_INVALID, 2, "Alpha", errmsg);
+        if (is_rect || !(state->geometry_mode & G_SHADE)) {
+            const char *errmsg = (is_rect) ? "rendering rectangle primitive" : "G_SHADE not set in geometry mode";
 
-                ARG_CHECK(state, !(state->bl.m1b_c1 == G_BL_A_SHADE), GW_CC_SHADE_ALPHA_INVALID, 1, errmsg);
-                ARG_CHECK(state, !(state->bl.m1b_c2 == G_BL_A_SHADE), GW_CC_SHADE_ALPHA_INVALID, 2, errmsg);
-            }
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, SHADE, 0) && !CC_C_HAS(&state->cc, SHADE_ALPHA, 0),
+                      GW_CC_SHADE_INVALID, 1, "RGB", errmsg);
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, SHADE, 0), GW_CC_SHADE_INVALID, 1, "Alpha", errmsg);
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, SHADE, 1) && !CC_C_HAS(&state->cc, SHADE_ALPHA, 1),
+                      GW_CC_SHADE_INVALID, 2, "RGB", errmsg);
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, SHADE, 1), GW_CC_SHADE_INVALID, 2, "Alpha", errmsg);
+
+            ARG_CHECK(state, !(state->bl.m1b_c1 == G_BL_A_SHADE), GW_CC_SHADE_ALPHA_INVALID, 1, errmsg);
+            ARG_CHECK(state, !(state->bl.m1b_c2 == G_BL_A_SHADE), GW_CC_SHADE_ALPHA_INVALID, 2, errmsg);
+        }
+
+        // Check TEXEL* inputs for fill rectangles. There's no way to provide texture coordinates in that case so they
+        // had better not be used.
+        if (prim_type == PRIM_TYPE_FILLRECT) {
+            // Check TEXEL0 in both cycles
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL0, 0), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL0", 1, "RGB");
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, TEXEL0, 0), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL0", 1, "Alpha");
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL0, 1), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL0", 2, "RGB");
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, TEXEL0, 1), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL0", 2, "Alpha");
+            // Check TEXEL1 in both cycles
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1, 0), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL1", 1, "RGB");
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, TEXEL1, 0), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL1", 1, "Alpha");
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL1", 2, "RGB");
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL_WITH_FILLRECT, "TEXEL1", 2, "Alpha");
         }
 
         // If cvg_dst is set to SAVE, IM_RD should also be enabled otherwise it behaves as if it were just set to FULL
+        // TODO what's the behavior here in other cycle modes? Fill mode crashes with IM_RD
         if ((rm & CVG_DST_MASK) == CVG_DST_SAVE)
             ARG_CHECK(state, rm & IM_RD, GW_CVG_SAVE_NO_IM_RD);
     }
@@ -2197,9 +2353,12 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
     // Check z-buffer settings if enabled
     if (z_cmp || z_upd) {
         if (prim_type == PRIM_TYPE_TRI) {
+            // If we're rendering tris, either prim depth or depth coefficients are usable. Make sure at least one of
+            // these is used.
             ARG_CHECK(state, zsrc == G_ZS_PRIM || (state->geometry_mode & G_ZBUFFER),
                       GW_ZS_PIXEL_SET_WITHOUT_G_ZBUFFER);
         } else {
+            // If we're rendering rectangles there's no way to provide depth coefficients, must use prim depth.
             ARG_CHECK(state, zsrc == G_ZS_PRIM, GW_ZSRC_INVALID);
         }
     }
@@ -2207,7 +2366,6 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
     switch (cycle_type) {
         case G_CYC_1CYCLE:
             // check blender configuration is the same for 1-Cycle mode
-            // TODO check this
             ARG_CHECK(state,
                       state->bl.m1a_c1 == state->bl.m1a_c2 && state->bl.m1b_c1 == state->bl.m1b_c2 &&
                           state->bl.m2a_c1 == state->bl.m2a_c2 && state->bl.m2b_c1 == state->bl.m2b_c2,
@@ -2221,61 +2379,90 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
                           state->cc.Ad0 == state->cc.Ad1,
                       GW_CC_STAGES_DIFFER_1CYC);
 
-            // check cc does not use COMBINED input
-            ARG_CHECK(state, !CC_C_HAS(&state->cc, G_CCMUX_COMBINED, 1), GW_CC_COMBINED_IN_C1, "RGB");
-            ARG_CHECK(state, !CC_A_HAS(&state->cc, G_ACMUX_COMBINED, 1), GW_CC_COMBINED_IN_C1, "Alpha");
+            // the following checks use the second cycle since hardware uses the second cycle only in 1-cycle mode
 
+            // check cc does not use COMBINED input
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, COMBINED, 1), GW_CC_COMBINED_IN_C1, "RGB");
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, COMBINED, 1), GW_CC_COMBINED_IN_C1, "Alpha");
             // check cc doe not use COMBINED_ALPHA input
-            ARG_CHECK(state, state->cc.c1 != G_CCMUX_COMBINED_ALPHA, GW_CC_COMBINED_ALPHA_IN_C1);
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, COMBINED_ALPHA, 1), GW_CC_COMBINED_ALPHA_IN_C1);
 
             // check cc does not use TEXEL1 input
-            ARG_CHECK(state, !CC_C_HAS(&state->cc, G_CCMUX_TEXEL1, 1), GW_CC_TEXEL1_RGB_1CYC);
-            ARG_CHECK(state, !CC_A_HAS(&state->cc, G_ACMUX_TEXEL1, 1), GW_CC_TEXEL1_ALPHA_1CYC);
-
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL1_RGB_1CYC);
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL1_ALPHA_1CYC);
             // check cc doe not use TEXEL1_ALPHA input
-            ARG_CHECK(state, state->cc.c1 != G_CCMUX_TEXEL1_ALPHA, GW_CC_TEXEL1_RGBA_1CYC);
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1), GW_CC_TEXEL1_RGBA_1CYC);
+
+            // record whether texel0 is used for tile validation
+            uses_tile0 = CC_C_HAS(&state->cc, TEXEL0, 1) || CC_A_HAS(&state->cc, TEXEL0, 1) ||
+                          CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
             break;
         case G_CYC_2CYCLE:
             // check cc does not use COMBINED input in the first cycle
-            ARG_CHECK(state, !CC_C_HAS(&state->cc, G_CCMUX_COMBINED, 0), GW_CC_COMBINED_IN_C2_C1, "RGB");
-            ARG_CHECK(state, !CC_A_HAS(&state->cc, G_ACMUX_COMBINED, 0), GW_CC_COMBINED_IN_C2_C1, "Alpha");
-
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, COMBINED, 0), GW_CC_COMBINED_IN_C2_C1, "RGB");
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, COMBINED, 0), GW_CC_COMBINED_IN_C2_C1, "Alpha");
             // check cc doe not use COMBINED_ALPHA input in the first cycle
-            ARG_CHECK(state, state->cc.c0 != G_CCMUX_COMBINED_ALPHA, GW_CC_COMBINED_ALPHA_IN_C2_C1);
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1), GW_CC_COMBINED_ALPHA_IN_C2_C1);
+
+            // warn about using the COMBINED input in the C slot specifically
+            ARG_CHECK(state, state->cc.c1 != G_CCMUX_COMBINED && state->cc.c1 != G_CCMUX_COMBINED_ALPHA, GW_CC_COMBINED_IN_C_SLOT);
 
             // check cc does not use TEXEL1 input in the second cycle
-            ARG_CHECK(state, !CC_C_HAS(&state->cc, G_CCMUX_TEXEL1, 1), GW_CC_TEXEL1_RGB_C2_2CYC);
-            ARG_CHECK(state, !CC_A_HAS(&state->cc, G_ACMUX_TEXEL1, 1), GW_CC_TEXEL1_ALPHA_C2_2CYC);
-
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL1_RGB_C2_2CYC);
+            ARG_CHECK(state, !CC_A_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL1_ALPHA_C2_2CYC);
             // check cc doe not use TEXEL1_ALPHA input in the second cycle
-            ARG_CHECK(state, state->cc.c1 != G_CCMUX_TEXEL1_ALPHA, GW_CC_TEXEL1_RGBA_C2_2CYC);
+            ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1), GW_CC_TEXEL1_RGBA_C2_2CYC);
 
-            uses_texel1 = (prim_type != PRIM_TYPE_FILLRECT) &&
-                          (CC_C_HAS(&state->cc, G_CCMUX_TEXEL1, 0) || CC_C_HAS(&state->cc, G_CCMUX_TEXEL0, 1) ||
-                           CC_A_HAS(&state->cc, G_ACMUX_TEXEL1, 0) || CC_A_HAS(&state->cc, G_ACMUX_TEXEL0, 1));
+            // record whether texel0 and texel1 is used for tile validation
+            // note that in the second cycle, the way TEXEL0 and TEXEL1 map to the tiles is swapped, that is
+            //         | Cycle 0 | Cycle 1
+            // --------+---------+--------------
+            //  TEXEL0 | Tile 0  | Tile 1
+            //  TEXEL1 | Tile 1  | Tile 0 (bug)
+            uses_tile0 = CC_C_HAS(&state->cc, TEXEL0, 0) || CC_C_HAS(&state->cc, TEXEL1, 1) ||
+                          CC_A_HAS(&state->cc, TEXEL0, 0) || CC_A_HAS(&state->cc, TEXEL1, 1) ||
+                          CC_C_HAS(&state->cc, TEXEL0_ALPHA, 0) || CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1);
+            uses_tile1 = CC_C_HAS(&state->cc, TEXEL1, 0) || CC_C_HAS(&state->cc, TEXEL0, 1) ||
+                          CC_A_HAS(&state->cc, TEXEL1, 0) || CC_A_HAS(&state->cc, TEXEL0, 1) ||
+                          CC_C_HAS(&state->cc, TEXEL1_ALPHA, 0) || CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
             break;
         case G_CYC_FILL:
+            // Color/depth reading and per-pixel depth writing crash in fill mode
             ARG_CHECK(state, !((rm & IM_RD) || z_cmp), GW_FILLMODE_CIMG_ZIMG_RD_PER_PIXEL);
             ARG_CHECK(state, !(z_upd && zsrc == G_ZS_PIXEL), GW_FILLMODE_ZIMG_WR_PER_PIXEL);
             break;
-        case G_CYC_COPY:;
+        case G_CYC_COPY:
+            // Color/depth reading and per-pixel depth writing crash in copy mode
             ARG_CHECK(state, !((rm & IM_RD) || z_cmp), GW_COPYMODE_CIMG_ZIMG_RD_PER_PIXEL);
             ARG_CHECK(state, !(z_upd && zsrc == G_ZS_PIXEL), GW_COPYMODE_ZIMG_WR_PER_PIXEL);
 
+            // AA is bypassed in copy mode
             ARG_CHECK(state, !(rm & AA_EN), GW_COPYMODE_AA);
+            // Blender stages are bypassed in copy mode
             ARG_CHECK(state, rm == 0, GW_COPYMODE_BL_SET);
+            // Texture filtering is bypassed in copy mode
             ARG_CHECK(state, OTHERMODE_VAL(state, hi, TEXTFILT) == G_TF_POINT, GW_COPYMODE_TEXTURE_FILTER);
             break;
     }
 
-    if (prim_type == PRIM_TYPE_TEXRECT || (prim_type == PRIM_TYPE_TRI && state->render_tile_on)) {
-        chk_render_tile(state, tile);
-        if (uses_texel1) {
-            if (tile == 7) // TODO warning? don't bother?
-                Note(gfxd_vprintf, "TEXEL0 was tile 7 so TEXEL1 is sourced from tile 0");
-            chk_render_tile(state, (tile + 1) & 7);
+    if (cycle_type != G_CYC_FILL) {
+        // Texture coordinates are valid if the primitive is a texrect or is a triangle with texturing enabled (G_ON)
+        bool tcoords_valid = prim_type == PRIM_TYPE_TEXRECT || (prim_type == PRIM_TYPE_TRI && state->render_tile_on);
+
+        if (tcoords_valid) {
+            // Check the used tiles (TODO LOD should check a range of tiles beginning at the rendertile, we can't tell
+            // which two tiles will be selected but they should all be consistent with each other anyway)
+            if (uses_tile0)
+                chk_render_tile(state, tile);
+
+            if (uses_tile1) {
+                if (tile == 7) // TODO warning? or just note?
+                    Note(gfxd_vprintf, "TEXEL0 was tile 7 so TEXEL1 is sourced from tile 0");
+                chk_render_tile(state, (tile + 1) & 7);
+            }
         }
     }
+
     state->pipe_busy = true;
     return 0;
 }

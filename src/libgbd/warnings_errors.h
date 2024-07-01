@@ -28,6 +28,7 @@ DEFINE_ERROR(SCISSOR_UNSET, "Scissor must be set before rendering primitives")
 DEFINE_ERROR(CIMG_UNSET, "Color image must be set before rendering primitives")
 DEFINE_ERROR(FILLRECT_FILLCOLOR_UNSET, "Filling a rectangle without ever setting the fill color")
 DEFINE_ERROR(CC_SHADE_INVALID, "Shade used in CC cycle %d %s input when %s")
+DEFINE_ERROR(CC_TEXEL_WITH_FILLRECT, "%s used in CC cycle %d %s input when rendering fill rectangle")
 DEFINE_ERROR(CC_SHADE_ALPHA_INVALID, "Shade alpha used as blender cycle %d input when %s")
 DEFINE_ERROR(ZS_PIXEL_SET_WITHOUT_G_ZBUFFER, "Per-pixel depth source (G_ZS_PIXEL) is set but G_ZBUFFER is unset")
 DEFINE_ERROR(
@@ -45,7 +46,7 @@ DEFINE_ERROR(COPYMODE_AA, "Anti-aliasing is unavailable in COPY mode")
 DEFINE_ERROR(COPYMODE_BL_SET, "Blender pipeline stages are skipped in COPY mode")
 DEFINE_ERROR(COPYMODE_TEXTURE_FILTER, "Texture filtering is unavailable in COPY mode")
 DEFINE_ERROR(TILEDESC_BAD, "Bad tile index %d")
-DEFINE_ERROR(TILEDESC_USED_BUT_NOT_SET, "Tile %d used for rendering but was never set")
+DEFINE_WARNING(TILEDESC_USED_BUT_NOT_SET, "Tile %d used for rendering but was never set") // TODO this should really be an error
 DEFINE_ERROR(CI_RENDER_TILE_NO_TLUT,
              "Render tile %d is color-indexed but TLUT mode was not enabled in other modes before drawing")
 DEFINE_ERROR(NO_CI_RENDER_TILE_TLUT,
@@ -122,3 +123,5 @@ DEFINE_WARNING(CVG_SAVE_NO_IM_RD,
 DEFINE_WARNING(
     CI_CIMG_FMTSIZ,
     "CI8 is technically invalid for color images, it behaves the same as I8 which better describes the behavior")
+DEFINE_WARNING(CC_COMBINED_IN_C_SLOT, "Using COMBINED in the C input of the combiner is discouraged: the "
+                                      "C input is more prone to overflow than the other inputs")

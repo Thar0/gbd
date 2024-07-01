@@ -29,6 +29,7 @@ FORMAT_ARGS := -i -style=file
 
 ICONV := $(ICONV_PREFIX)/lib/libiconv.a
 LIBGFXD := $(BUILD_DIR)/libgfxd.a
+
 CFLAGS := -Og -g3 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -ffunction-sections -fdata-sections
 
 # libgbd (the implementation for gbd)

@@ -134,6 +134,7 @@ typedef struct {
     int n_gfx;
     bool task_done;
     bool pipeline_crashed;
+    bool hit_invalid; // whether we hit invalid commands when we crashed
     int multi_packet;
     char multi_packet_name[32];
     ObStack disp_stack;
@@ -151,7 +152,9 @@ typedef struct {
     MtxF mvp_mtx;
     float persp_norm;
     uint32_t geometry_mode;
-    uint32_t dl_stack[18];
+    uint32_t dl_stack_ra[18]; // Microcode maintains a return address stack
+    uint32_t dl_stack_pc[18]; // We maintain a pc stack in addition
+    int dl_stack_cmd_nums[18];
     int dl_stack_top;
     Vp cur_vp;
     int last_loaded_vtx_num;
@@ -1224,11 +1227,19 @@ bad_fmt_siz_err:
  */
 
 static uint32_t
-dl_stack_peek(gfx_state_t *state)
+dl_stack_peek_pc(gfx_state_t *state)
 {
     if (state->dl_stack_top == -1)
         return 0; // peek failed, stack empty
-    return state->dl_stack[state->dl_stack_top];
+    return state->dl_stack_pc[state->dl_stack_top];
+}
+
+static uint32_t
+dl_stack_peek_ra(gfx_state_t *state)
+{
+    if (state->dl_stack_top == -1)
+        return 0; // peek failed, stack empty
+    return state->dl_stack_ra[state->dl_stack_top];
 }
 
 static uint32_t
@@ -1236,16 +1247,19 @@ dl_stack_pop(gfx_state_t *state)
 {
     if (state->dl_stack_top == -1)
         return 0; // pop failed, stack empty
-    return state->dl_stack[state->dl_stack_top--];
+    return state->dl_stack_ra[state->dl_stack_top--];
 }
 
 static int
-dl_stack_push(gfx_state_t *state, uint32_t dl)
+dl_stack_push(gfx_state_t *state, uint32_t pc, uint32_t ra)
 {
-    if (state->dl_stack_top != ARRAY_COUNT(state->dl_stack))
-        state->dl_stack[++state->dl_stack_top] = dl;
-    else
+    if (state->dl_stack_top == ARRAY_COUNT(state->dl_stack_ra))
         return -1; // push failed, stack full
+
+    state->dl_stack_top++;
+    state->dl_stack_ra[state->dl_stack_top] = ra;
+    state->dl_stack_pc[state->dl_stack_top] = pc;
+    state->dl_stack_cmd_nums[state->dl_stack_top] = state->n_gfx;
     return 0;
 }
 
@@ -1399,7 +1413,9 @@ chk_SPBranchList(gfx_state_t *state)
 static int
 chk_SPDisplayList(gfx_state_t *state)
 {
-    if (dl_stack_push(state, state->gfx_addr) == -1)
+    uint32_t dl = gfxd_arg_value(0)->u;
+
+    if (dl_stack_push(state, dl, state->gfx_addr) == -1)
         WARNING_ERROR(state, GW_DL_STACK_OVERFLOW);
 
     return chk_SPBranchList(state);
@@ -2832,6 +2848,7 @@ chk_DPSetTile(gfx_state_t *state)
 static int
 chk_Invalid(gfx_state_t *state)
 {
+    state->hit_invalid = true;
     WARNING_ERROR(state, GW_INVALID_GFX_CMD);
     return 0;
 }
@@ -4411,18 +4428,29 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
 
         // Print state information
 
-        uint32_t cur_dl = dl_stack_peek(&state);
-
         fprintf(print_out, "In Display List ");
-        if (cur_dl == 0)
+        if (state.dl_stack_top == -1) {
+            // DL stack is empty
             fprintf(print_out, "ROOT\n");
-        else {
-            fprintf(print_out, "0x%08X (command #%d)\n", cur_dl, state.n_gfx - 1);
-            if (state.dl_stack_top > 0) {
-                // print a display list stack trace if more than 1 dl deep
-                fprintf(print_out, "Stack Trace:\n");
-                for (int i = state.dl_stack_top; i >= 0; i--)
-                    fprintf(print_out, "    0x%08X\n", state.dl_stack[i]);
+        } else {
+            // DL stack is non-empty
+            uint32_t cur_dl_pc = dl_stack_peek_pc(&state);
+            uint32_t cur_dl_ra = dl_stack_peek_ra(&state);
+
+            uint32_t cur_dl_pc_phys = segmented_to_physical(&state, cur_dl_pc);
+
+            fprintf(print_out, "0x%08X (command #%d)\n", cur_dl_pc_phys, state.n_gfx - 1);
+            // print a display list stack trace if more than 1 dl deep
+            fprintf(print_out, "Stack Trace:\n    pc[seg]    pc[phys]   ra[phys]\n");
+            for (int i = state.dl_stack_top; i >= 0; i--) {
+                uint32_t pc = state.dl_stack_pc[i];
+                uint32_t pc_phys = segmented_to_physical(&state, pc);
+                uint32_t ra = state.dl_stack_ra[i] + sizeof(Gfx);
+                fprintf(print_out, "    0x%08X 0x%08X 0x%08X (command #%d)\n", pc, pc_phys, ra, state.dl_stack_cmd_nums[i]);
+            }
+
+            if (state.hit_invalid) {
+                fprintf(print_out, "Display list call at 0x%08X likely jumped to an invalid or wrong segment pointer\n", cur_dl_ra);
             }
         }
 

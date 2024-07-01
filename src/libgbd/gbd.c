@@ -625,39 +625,39 @@ tex_siz_str(unsigned int siz)
 // [0] = Slot D
 
 // Value 0
-#define CC_C_COMBINED_BITPATTERN        0b1111
-#define CC_A_COMBINED_BITPATTERN        0b1101
-#define CC_C_LOD_FRACTION_BITPATTERN    0b0010
-#define CC_A_LOD_FRACTION_BITPATTERN    0b0010
+#define CC_C_COMBINED_BITPATTERN     0b1111
+#define CC_A_COMBINED_BITPATTERN     0b1101
+#define CC_C_LOD_FRACTION_BITPATTERN 0b0010
+#define CC_A_LOD_FRACTION_BITPATTERN 0b0010
 // Value 1
-#define CC_C_TEXEL0_BITPATTERN          0b1111
-#define CC_A_TEXEL0_BITPATTERN          0b1111
+#define CC_C_TEXEL0_BITPATTERN 0b1111
+#define CC_A_TEXEL0_BITPATTERN 0b1111
 // Value 2
-#define CC_C_TEXEL1_BITPATTERN          0b1111
-#define CC_A_TEXEL1_BITPATTERN          0b1111
+#define CC_C_TEXEL1_BITPATTERN 0b1111
+#define CC_A_TEXEL1_BITPATTERN 0b1111
 // Value 3
-#define CC_C_PRIMITIVE_BITPATTERN       0b1111
-#define CC_A_PRIMITIVE_BITPATTERN       0b1111
+#define CC_C_PRIMITIVE_BITPATTERN 0b1111
+#define CC_A_PRIMITIVE_BITPATTERN 0b1111
 // Value 4
-#define CC_C_SHADE_BITPATTERN           0b1111
-#define CC_A_SHADE_BITPATTERN           0b1111
+#define CC_C_SHADE_BITPATTERN 0b1111
+#define CC_A_SHADE_BITPATTERN 0b1111
 // Value 5
-#define CC_C_ENVIRONMENT_BITPATTERN     0b1111
-#define CC_A_ENVIRONMENT_BITPATTERN     0b1111
+#define CC_C_ENVIRONMENT_BITPATTERN 0b1111
+#define CC_A_ENVIRONMENT_BITPATTERN 0b1111
 // Value 6
-#define CC_C_1_BITPATTERN               0b1001
-#define CC_A_1_BITPATTERN               0b1101
-#define CC_C_CENTER_BITPATTERN          0b0110
-#define CC_A_CENTER_BITPATTERN          0b0000
-#define CC_C_PRIM_LOD_FRAC_BITPATTERN   0b0010 // also value 14
-#define CC_A_PRIM_LOD_FRAC_BITPATTERN   0b0010
+#define CC_C_1_BITPATTERN             0b1001
+#define CC_A_1_BITPATTERN             0b1101
+#define CC_C_CENTER_BITPATTERN        0b0110
+#define CC_A_CENTER_BITPATTERN        0b0000
+#define CC_C_PRIM_LOD_FRAC_BITPATTERN 0b0010 // also value 14
+#define CC_A_PRIM_LOD_FRAC_BITPATTERN 0b0010
 // Value 7
-#define CC_C_NOISE_BITPATTERN           0b1000
-#define CC_A_NOISE_BITPATTERN           0b0000
-#define CC_C_K4_BITPATTERN              0b0100
-#define CC_A_K4_BITPATTERN              0b0000
-#define CC_C_COMBINED_ALPHA_BITPATTERN  0b0000
-#define CC_A_COMBINED_ALPHA_BITPATTERN  0b0010
+#define CC_C_NOISE_BITPATTERN          0b1000
+#define CC_A_NOISE_BITPATTERN          0b0000
+#define CC_C_K4_BITPATTERN             0b0100
+#define CC_A_K4_BITPATTERN             0b0000
+#define CC_C_COMBINED_ALPHA_BITPATTERN 0b0000
+#define CC_A_COMBINED_ALPHA_BITPATTERN 0b0010
 // Value 8+
 #define CC_C_TEXEL0_ALPHA_BITPATTERN    0b0010
 #define CC_C_TEXEL1_ALPHA_BITPATTERN    0b0010
@@ -668,16 +668,16 @@ tex_siz_str(unsigned int siz)
 #define CC_C_PRIM_LOD_FRAC_BITPATTERN   0b0010
 #define CC_C_K5_BITPATTERN              0b0010
 // Values 7-31, varying
-#define CC_C_0_BITPATTERN               0b1111
-#define CC_A_0_BITPATTERN               0b1111
+#define CC_C_0_BITPATTERN 0b1111
+#define CC_A_0_BITPATTERN 0b1111
 
 #define CCBITMASK(n) ((1 << (n)) - 1)
 
 // FIXME won't work for all possible encodings of the 0 input
-#define CC_C_HAS(cc, input, clk)                                                                        \
-    ((((CC_C_##input##_BITPATTERN) & (1 << 3)) && (cc)->a##clk == (G_CCMUX_##input & CCBITMASK(4))) ||  \
-     (((CC_C_##input##_BITPATTERN) & (1 << 2)) && (cc)->b##clk == (G_CCMUX_##input & CCBITMASK(4))) ||  \
-     (((CC_C_##input##_BITPATTERN) & (1 << 1)) && (cc)->c##clk == (G_CCMUX_##input & CCBITMASK(5))) ||  \
+#define CC_C_HAS(cc, input, clk)                                                                       \
+    ((((CC_C_##input##_BITPATTERN) & (1 << 3)) && (cc)->a##clk == (G_CCMUX_##input & CCBITMASK(4))) || \
+     (((CC_C_##input##_BITPATTERN) & (1 << 2)) && (cc)->b##clk == (G_CCMUX_##input & CCBITMASK(4))) || \
+     (((CC_C_##input##_BITPATTERN) & (1 << 1)) && (cc)->c##clk == (G_CCMUX_##input & CCBITMASK(5))) || \
      (((CC_C_##input##_BITPATTERN) & (1 << 0)) && (cc)->d##clk == (G_CCMUX_##input & CCBITMASK(3))))
 
 // FIXME won't work for all possible encodings of the 0 input
@@ -2262,7 +2262,8 @@ chk_render_tile(gfx_state_t *state, int tile)
                               GW_COPYMODE_MISMATCH_8B);
 
                 if (state->last_cimg.siz == G_IM_SIZ_16b)
-                    ARG_CHECK(state, tile_desc->fmt == G_IM_FMT_CI || tile_desc->siz == G_IM_SIZ_16b, GW_COPYMODE_MISMATCH_16B);
+                    ARG_CHECK(state, tile_desc->fmt == G_IM_FMT_CI || tile_desc->siz == G_IM_SIZ_16b,
+                              GW_COPYMODE_MISMATCH_16B);
             }
         }
     }
@@ -2395,7 +2396,7 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
 
             // record whether texel0 is used for tile validation
             uses_tile0 = CC_C_HAS(&state->cc, TEXEL0, 1) || CC_A_HAS(&state->cc, TEXEL0, 1) ||
-                          CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
+                         CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
             break;
         case G_CYC_2CYCLE:
             // check cc does not use COMBINED input in the first cycle
@@ -2405,7 +2406,8 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
             ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1), GW_CC_COMBINED_ALPHA_IN_C2_C1);
 
             // warn about using the COMBINED input in the C slot specifically
-            ARG_CHECK(state, state->cc.c1 != G_CCMUX_COMBINED && state->cc.c1 != G_CCMUX_COMBINED_ALPHA, GW_CC_COMBINED_IN_C_SLOT);
+            ARG_CHECK(state, state->cc.c1 != G_CCMUX_COMBINED && state->cc.c1 != G_CCMUX_COMBINED_ALPHA,
+                      GW_CC_COMBINED_IN_C_SLOT);
 
             // check cc does not use TEXEL1 input in the second cycle
             ARG_CHECK(state, !CC_C_HAS(&state->cc, TEXEL1, 1), GW_CC_TEXEL1_RGB_C2_2CYC);
@@ -2420,11 +2422,11 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
             //  TEXEL0 | Tile 0  | Tile 1
             //  TEXEL1 | Tile 1  | Tile 0 (bug)
             uses_tile0 = CC_C_HAS(&state->cc, TEXEL0, 0) || CC_C_HAS(&state->cc, TEXEL1, 1) ||
-                          CC_A_HAS(&state->cc, TEXEL0, 0) || CC_A_HAS(&state->cc, TEXEL1, 1) ||
-                          CC_C_HAS(&state->cc, TEXEL0_ALPHA, 0) || CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1);
+                         CC_A_HAS(&state->cc, TEXEL0, 0) || CC_A_HAS(&state->cc, TEXEL1, 1) ||
+                         CC_C_HAS(&state->cc, TEXEL0_ALPHA, 0) || CC_C_HAS(&state->cc, TEXEL1_ALPHA, 1);
             uses_tile1 = CC_C_HAS(&state->cc, TEXEL1, 0) || CC_C_HAS(&state->cc, TEXEL0, 1) ||
-                          CC_A_HAS(&state->cc, TEXEL1, 0) || CC_A_HAS(&state->cc, TEXEL0, 1) ||
-                          CC_C_HAS(&state->cc, TEXEL1_ALPHA, 0) || CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
+                         CC_A_HAS(&state->cc, TEXEL1, 0) || CC_A_HAS(&state->cc, TEXEL0, 1) ||
+                         CC_C_HAS(&state->cc, TEXEL1_ALPHA, 0) || CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
             break;
         case G_CYC_FILL:
             // Color/depth reading and per-pixel depth writing crash in fill mode

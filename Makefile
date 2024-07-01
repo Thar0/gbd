@@ -63,6 +63,8 @@ distclean: clean-all
 FORMAT_FILES := $(shell find src -type f -name "*.[ch]")
 format:
 	$(CLANG_FORMAT) $(FORMAT_ARGS) $(FORMAT_FILES)
+# Trim trailing whitespace
+	$(foreach f,$(FORMAT_FILES),$(shell sed -i 's/[ \t]*$$//' $f))
 # Add missing newlines
 	$(foreach f,$(FORMAT_FILES),$(shell [ -n "$$(tail -c1 $f)" ] && printf '\n' >> $f))
 

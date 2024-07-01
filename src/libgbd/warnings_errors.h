@@ -46,7 +46,8 @@ DEFINE_ERROR(COPYMODE_AA, "Anti-aliasing is unavailable in COPY mode")
 DEFINE_ERROR(COPYMODE_BL_SET, "Blender pipeline stages are skipped in COPY mode")
 DEFINE_ERROR(COPYMODE_TEXTURE_FILTER, "Texture filtering is unavailable in COPY mode")
 DEFINE_ERROR(TILEDESC_BAD, "Bad tile index %d")
-DEFINE_WARNING(TILEDESC_USED_BUT_NOT_SET, "Tile %d used for rendering but was never set") // TODO this should really be an error
+DEFINE_WARNING(TILEDESC_USED_BUT_NOT_SET,
+               "Tile %d used for rendering but was never set") // TODO this should really be an error
 DEFINE_ERROR(CI_RENDER_TILE_NO_TLUT,
              "Render tile %d is color-indexed but TLUT mode was not enabled in other modes before drawing")
 DEFINE_ERROR(NO_CI_RENDER_TILE_TLUT,

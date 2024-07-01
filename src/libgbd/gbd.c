@@ -139,6 +139,11 @@ typedef struct {
     char multi_packet_name[32];
     ObStack disp_stack;
 
+    int last_combiner_cmd_num;
+    int last_geometry_mode_cmd_num;
+    int last_othermode_cmd_num;
+    int last_tile_assignments[8];
+
     // RSP
     uint16_t segment_set_bits;
     uint32_t segment_table[16];
@@ -307,6 +312,7 @@ error: <desc>
 #define ERROR_COLOR   VT_RGBFCOL(232, 56, 40)
 #define WARNING_COLOR VT_RGBFCOL(180, 0, 160)
 #define NOTE_COLOR    VT_RGBFCOL(96, 216, 216)
+#define DIAG_COLOR    VT_RGBFCOL(255, 255, 255)
 
 void
 Note(vprint_fn vpfn, const char *fmt, ...)
@@ -314,9 +320,9 @@ Note(vprint_fn vpfn, const char *fmt, ...)
     va_list args;
     va_start(args, fmt);
 
-    _Vprint(vpfn, NOTE_COLOR "Note: " VT_RST);
+    _Vprint(vpfn, NOTE_COLOR "Note: " DIAG_COLOR);
     vpfn(fmt, args);
-    _Vprint(vpfn, "\n");
+    _Vprint(vpfn, VT_RST "\n");
 
     va_end(args);
 }
@@ -338,9 +344,9 @@ Warning_Error(gfx_state_t *state, vprint_fn vpfn, enum gbi_warning warn_id, cons
             _Vprint(vpfn, "  ");
         }
 
-        _Vprint(vpfn, (err) ? (ERROR_COLOR "Error: " VT_RST) : (WARNING_COLOR "Warning: " VT_RST));
+        _Vprint(vpfn, (err) ? (ERROR_COLOR "Error: " DIAG_COLOR) : (WARNING_COLOR "Warning: " DIAG_COLOR));
         vpfn(fmt, args);
-        _Vprint(vpfn, "\n");
+        _Vprint(vpfn, VT_RST "\n");
     }
 
     va_end(args);
@@ -464,6 +470,80 @@ print_light(FILE *print_out, gfx_state_t *state, uint32_t lights_addr, int count
 err:
     fprintf(print_out, VT_RGBCOL(255, 0, 0, 255, 255, 255) "READ ERROR" VT_RST "\n");
     return -1;
+}
+
+static const char *
+tex_fmt_str(unsigned int fmt)
+{
+    static const char *names[] = {
+        "G_IM_FMT_RGBA",
+        "G_IM_FMT_YUV",
+        "G_IM_FMT_CI",
+        "G_IM_FMT_IA",
+        "G_IM_FMT_I",
+        ERROR_COLOR "INVALID (behaves like I)" VT_RST,
+        ERROR_COLOR "INVALID (behaves like I)" VT_RST,
+        ERROR_COLOR "INVALID (behaves like I)" VT_RST,
+    };
+
+    if (fmt >= ARRAY_COUNT(names))
+        return ERROR_COLOR "INVALID VALUE" VT_RST;
+    return names[fmt];
+}
+
+static const char *
+tex_clamp_wrap_mirror_str(unsigned int cm)
+{
+    switch (cm & 3) {
+        case G_TX_NOMIRROR | G_TX_WRAP:
+            return "G_TX_NOMIRROR | G_TX_WRAP";
+        case G_TX_MIRROR | G_TX_WRAP:
+            return "G_TX_MIRROR | G_TX_WRAP";
+        case G_TX_NOMIRROR | G_TX_CLAMP:
+            return "G_TX_NOMIRROR | G_TX_CLAMP";
+        case G_TX_MIRROR | G_TX_CLAMP:
+            return "G_TX_MIRROR | G_TX_CLAMP";
+        default:
+            assert(false);
+            __builtin_unreachable();
+    }
+}
+
+static const char *
+tex_mask_str(unsigned int mask)
+{
+    static const char *tile_mask_names[] = {
+        "G_TX_NOMASK", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
+    };
+    if (mask >= ARRAY_COUNT(tile_mask_names))
+        return "/*INVALID*/";
+    return tile_mask_names[mask];
+}
+
+static const char *
+tex_shift_str(unsigned int shift)
+{
+    static const char *tile_shift_names[] = {
+        "G_TX_NOLOD", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13", "14", "15",
+    };
+    if (shift >= ARRAY_COUNT(tile_shift_names))
+        return "/*INVALID*/";
+    return tile_shift_names[shift];
+}
+
+static const char *
+tex_siz_str(unsigned int siz)
+{
+    static const char *names[] = {
+        "G_IM_SIZ_4b",
+        "G_IM_SIZ_8b",
+        "G_IM_SIZ_16b",
+        "G_IM_SIZ_32b",
+    };
+
+    if (siz >= ARRAY_COUNT(names))
+        return ERROR_COLOR "INVALID VALUE" VT_RST;
+    return names[siz];
 }
 
 static const char *
@@ -1257,8 +1337,8 @@ dl_stack_push(gfx_state_t *state, uint32_t pc, uint32_t ra)
         return -1; // push failed, stack full
 
     state->dl_stack_top++;
-    state->dl_stack_ra[state->dl_stack_top] = ra;
-    state->dl_stack_pc[state->dl_stack_top] = pc;
+    state->dl_stack_pc[state->dl_stack_top]       = pc;
+    state->dl_stack_ra[state->dl_stack_top]       = ra;
     state->dl_stack_cmd_nums[state->dl_stack_top] = state->n_gfx;
     return 0;
 }
@@ -1956,6 +2036,7 @@ chk_SPVertex(gfx_state_t *state)
     ARG_CHECK(state, n != 0, GW_VTX_LOADING_ZERO);
     ARG_CHECK(state, n <= VTX_CACHE_SIZE, GW_VTX_LOADING_TOO_MANY);
     ARG_CHECK(state, v0 + n <= VTX_CACHE_SIZE, GW_VTX_CACHE_OVERFLOW, n, v0);
+    ARG_CHECK(state, v0 >= 0, GW_VTX_CACHE_UNDERFLOW, v0);
 
     // TODO G_LIGHTING validation
 
@@ -2021,21 +2102,29 @@ chk_render_tile(gfx_state_t *state, int tile)
     int tlut_en    = OTHERMODE_VAL(state, hi, TEXTLUT) != G_TT_NONE;
 
     tile_descriptor_t *tile_desc = get_tile_desc(state, tile);
-    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD);
+    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD, tile);
 
     if (tile_desc != NULL) {
-        if (tile_desc->fmt == G_IM_FMT_CI)
-            ARG_CHECK(state, tlut_en, GW_CI_RENDER_TILE_NO_TLUT);
-        else
-            ARG_CHECK(state, !tlut_en, GW_NO_CI_RENDER_TILE_TLUT);
+        bool was_set = state->last_tile_assignments[tile] != 0;
 
-        if (cycle_type == G_CYC_COPY) {
-            if (state->last_cimg.siz != G_IM_SIZ_8b)
-                ARG_CHECK(state, tile_desc->siz != G_IM_SIZ_4b && tile_desc->siz != G_IM_SIZ_8b,
-                          GW_COPYMODE_MISMATCH_8B);
+        ARG_CHECK(state, was_set, GW_TILEDESC_USED_BUT_NOT_SET, tile);
 
-            if (state->last_cimg.siz == G_IM_SIZ_16b)
-                ARG_CHECK(state, tile_desc->siz == G_IM_SIZ_16b, GW_COPYMODE_MISMATCH_16B);
+        if (was_set) {
+            // If the tile was set, validate its properties
+
+            if (tile_desc->fmt == G_IM_FMT_CI)
+                ARG_CHECK(state, tlut_en, GW_CI_RENDER_TILE_NO_TLUT, tile);
+            else
+                ARG_CHECK(state, !tlut_en, GW_NO_CI_RENDER_TILE_TLUT, tile);
+
+            if (cycle_type == G_CYC_COPY) {
+                if (state->last_cimg.siz != G_IM_SIZ_8b)
+                    ARG_CHECK(state, tile_desc->siz != G_IM_SIZ_4b && tile_desc->siz != G_IM_SIZ_8b,
+                              GW_COPYMODE_MISMATCH_8B);
+
+                if (state->last_cimg.siz == G_IM_SIZ_16b)
+                    ARG_CHECK(state, tile_desc->siz == G_IM_SIZ_16b, GW_COPYMODE_MISMATCH_16B);
+            }
         }
     }
 
@@ -2196,13 +2285,19 @@ chk_DPFillTriangle(gfx_state_t *state, int tnum, int v0, int v1, int v2, int fla
 {
     int last_loaded_vtx_num = state->last_loaded_vtx_num;
 
-    // TODO this is often OK and even wanted for optimized rendering, this should be changed to use a stack-based
-    // approach i.e. if a DL loads vertices and renders with them before returning and then those verts are used again
-    // without a reload, that should be flagged.
-    ARG_CHECK(state, v0 < last_loaded_vtx_num && v1 < last_loaded_vtx_num && v2 < last_loaded_vtx_num,
-              GW_TRI_LEECHING_VERTS, tnum);
+    bool all_in_bounds =
+        (unsigned)v0 < VTX_CACHE_SIZE && (unsigned)v1 < VTX_CACHE_SIZE && (unsigned)v2 < VTX_CACHE_SIZE;
+    ARG_CHECK(state, all_in_bounds, GW_TRI_VTX_OOB, tnum);
 
-    ARG_CHECK(state, v0 < VTX_CACHE_SIZE && v1 < VTX_CACHE_SIZE && v2 < VTX_CACHE_SIZE, GW_TRI_VTX_OOB, tnum);
+    if (all_in_bounds) {
+        // Don't check unless all vertices are in bounds
+
+        // TODO this is often OK and even wanted for optimized rendering, this should be changed to use a stack-based
+        // approach i.e. if a DL loads vertices and renders with them before returning and then those verts are used
+        // again without a reload, that should be flagged.
+        ARG_CHECK(state, v0 < last_loaded_vtx_num && v1 < last_loaded_vtx_num && v2 < last_loaded_vtx_num,
+                  GW_TRI_LEECHING_VERTS, tnum);
+    }
 
     if (state->render_tile_on) {
         // This is only a warning as a textured triangle will pass an inverse W either way, so no garbage gets read
@@ -2234,7 +2329,8 @@ chk_SP1Quadrangle(gfx_state_t *state)
     int flag = gfxd_arg_value(4)->i;
 
     chk_DPFillTriangle(state, 1, v0, v1, v2, flag);
-    chk_DPFillTriangle(state, 2, v0, v2, v3, flag);
+    if (!state->pipeline_crashed)
+        chk_DPFillTriangle(state, 2, v0, v2, v3, flag);
     return 0;
 }
 
@@ -2252,7 +2348,8 @@ chk_SP2Triangles(gfx_state_t *state)
     int flag1 = gfxd_arg_value(7)->i;
 
     chk_DPFillTriangle(state, 1, v00, v01, v02, flag0);
-    chk_DPFillTriangle(state, 2, v10, v11, v12, flag1);
+    if (!state->pipeline_crashed)
+        chk_DPFillTriangle(state, 2, v10, v11, v12, flag1);
     return 0;
 }
 
@@ -2317,6 +2414,8 @@ chk_DPSetCombine(gfx_state_t *state)
     state->combiner_lo = cc_lo;
     cc_decode(&state->cc, state->combiner_hi, state->combiner_lo);
 
+    state->last_combiner_cmd_num = state->n_gfx;
+
     return 0;
 }
 
@@ -2325,6 +2424,8 @@ chk_geometrymode(gfx_state_t *state, uint32_t clear, uint32_t set)
 {
     state->geometry_mode &= ~clear;
     state->geometry_mode |= set;
+
+    state->last_geometry_mode_cmd_num = state->n_gfx;
 
     // TODO check for G_LIGHTING set without G_SHADE and warn
     // TODO check for texgen without G_LIGHTING and warn
@@ -2372,6 +2473,9 @@ chk_othermode(gfx_state_t *state)
 {
     CHECK_PIPESYNC(state);
     bl_decode(&state->bl, OTHERMODE_VAL(state, lo, RENDERMODE));
+
+    state->last_othermode_cmd_num = state->n_gfx;
+
     return 0;
 }
 
@@ -2610,7 +2714,7 @@ chk_DPLoadBlock(gfx_state_t *state)
     // load_busy = true;
 
     ARG_CHECK(state, state->last_timg.siz != G_IM_SIZ_4b, GW_TIMG_LOAD_4B);
-    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD);
+    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD, tile);
     if (tile_desc != NULL) {
 
         ARG_CHECK(state, tile_desc->fmt == state->last_timg.fmt && tile_desc->siz == state->last_timg.siz,
@@ -2652,7 +2756,7 @@ chk_DPLoadTile(gfx_state_t *state)
     state->pipe_busy = true;
     // load_busy = true;
 
-    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD);
+    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD, tile);
     if (tile_desc != NULL) {
         tile_desc->uls = uls;
         tile_desc->ult = ult;
@@ -2706,7 +2810,7 @@ chk_DPLoadTLUTCmd(gfx_state_t *state)
     state->pipe_busy = true;
     // load_busy = true;
 
-    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD);
+    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD, tile);
     if (tile_desc != NULL) {
         ARG_CHECK(state, tile_desc->tmem >= 0x100, GW_TLUT_BAD_TMEM_ADDR);
 
@@ -2817,7 +2921,7 @@ chk_DPSetTile(gfx_state_t *state)
 
     CHECK_TILESYNC(state, tile);
 
-    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD);
+    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD, tile);
 
     ARG_CHECK(state, chk_ValidImgFmt(fmt), GW_INVALID_TIMG_FMT);
 
@@ -2841,6 +2945,8 @@ chk_DPSetTile(gfx_state_t *state)
         tile_desc->cms     = cms;
         tile_desc->masks   = masks;
         tile_desc->shifts  = shifts;
+
+        state->last_tile_assignments[tile] = state->n_gfx;
     }
     return 0;
 }
@@ -2991,7 +3097,7 @@ chk_DPSetTileSize(gfx_state_t *state)
 
     CHECK_TILESYNC(state, tile);
 
-    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD);
+    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD, tile);
 
     if (tile_desc != NULL) {
         tile_desc->uls = uls;
@@ -3325,7 +3431,7 @@ chk_SPTexture(gfx_state_t *state)
 
     tile_descriptor_t *tile_desc = get_tile_desc(state, tile);
 
-    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD);
+    ARG_CHECK(state, tile_desc != NULL, GW_TILEDESC_BAD, tile);
 
     state->render_tile = tile;
 
@@ -3819,6 +3925,13 @@ chk_DPLoadTextureBlock_4b(gfx_state_t *state)
     return chk_LTB(state, timg, fmt, siz, width, height, pal, cms, cmt, masks, maskt, shifts, shiftt);
 }
 
+static int
+chk_DPLoadTextureTile(gfx_state_t *state)
+{
+    // TODO
+    return 0;
+}
+
 /**********************************************************************************************************************\
  *  Run
  */
@@ -3858,7 +3971,7 @@ static chk_fn chk_tbl[] = {
     [gfxd__DPLoadTextureTile]      = NULL,
     [gfxd_DPLoadTextureTileYuv]    = NULL,
     [gfxd_DPLoadTextureTile_4b]    = NULL,
-    [gfxd_DPLoadTextureTile]       = NULL,
+    [gfxd_DPLoadTextureTile]       = chk_DPLoadTextureTile,
     [gfxd_DPLoadBlock]             = chk_DPLoadBlock,
     [gfxd_DPNoOp]                  = NULL,
     [gfxd_DPNoOpTag]               = NULL,
@@ -4441,20 +4554,24 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
 
             fprintf(print_out, "0x%08X (command #%d)\n", cur_dl_pc_phys, state.n_gfx - 1);
             // print a display list stack trace if more than 1 dl deep
-            fprintf(print_out, "Stack Trace:\n    pc[seg]    pc[phys]   ra[phys]\n");
+            fprintf(print_out, DIAG_COLOR "\nStack Trace:\n    pc[seg]    pc[phys]   ra[phys]\n" VT_RST);
             for (int i = state.dl_stack_top; i >= 0; i--) {
-                uint32_t pc = state.dl_stack_pc[i];
+                uint32_t pc      = state.dl_stack_pc[i];
                 uint32_t pc_phys = segmented_to_physical(&state, pc);
-                uint32_t ra = state.dl_stack_ra[i] + sizeof(Gfx);
-                fprintf(print_out, "    0x%08X 0x%08X 0x%08X (command #%d)\n", pc, pc_phys, ra, state.dl_stack_cmd_nums[i]);
+                uint32_t ra      = state.dl_stack_ra[i] + sizeof(Gfx);
+                fprintf(print_out, "    0x%08X 0x%08X 0x%08X (command #%d)\n", pc, pc_phys, ra,
+                        state.dl_stack_cmd_nums[i]);
             }
 
             if (state.hit_invalid) {
-                fprintf(print_out, "Display list call at 0x%08X likely jumped to an invalid or wrong segment pointer\n", cur_dl_ra);
+                fprintf(print_out,
+                        WARNING_COLOR
+                        "Display list call at 0x%08X likely jumped to an invalid or wrong segment pointer\n" VT_RST,
+                        cur_dl_ra);
             }
         }
 
-        fprintf(print_out, "DISP refs trace:\n");
+        fprintf(print_out, DIAG_COLOR "\nDISP Refs Trace:\n" VT_RST);
         VECTOR_FOR_EACH_ELEMENT_REVERSED(&state.disp_stack.v, ent, DispEntry *)
         {
             fprintf(print_out, "    At ");
@@ -4462,8 +4579,50 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
             fprintf(print_out, ", %d\n", ent->line_no);
         }
 
-        fprintf(print_out, "Segment dump:\n");
+        fprintf(print_out, DIAG_COLOR "\nSegment Table:\n" VT_RST);
         print_segments(print_out, state.segment_table);
+
+        fprintf(print_out, DIAG_COLOR "\nOthermode (last assignment at command #%d):\n    " VT_RST,
+                state.last_othermode_cmd_num);
+        print_othermode(print_out, state.othermode_hi, state.othermode_lo);
+        fprintf(print_out, "\n");
+        fprintf(print_out, DIAG_COLOR "\nCombiner (last assignment at command #%d)\n    " VT_RST,
+                state.last_combiner_cmd_num);
+        print_cc(print_out, state.combiner_hi, state.combiner_lo);
+        fprintf(print_out, "\n");
+        fprintf(print_out, DIAG_COLOR "\nGeometry Mode (last assignment at command #%d)\n    " VT_RST,
+                state.last_geometry_mode_cmd_num);
+        print_geometrymode(print_out, state.geometry_mode);
+        fprintf(print_out, "\n");
+
+        fprintf(print_out, DIAG_COLOR "\nTile Descriptors\n" VT_RST);
+        for (int tile = 0; tile < 8; tile++) {
+            if (state.last_tile_assignments[tile] == 0) {
+                fprintf(print_out, DIAG_COLOR "  Tile %d (" WARNING_COLOR "never set" DIAG_COLOR ")\n" VT_RST, tile);
+            } else {
+                tile_descriptor_t *tile_desc = &state.tile_descriptors[tile];
+
+                fprintf(print_out,
+                        // clang-format off
+                        DIAG_COLOR
+                        "  Tile %d (last assignment at command #%d)"    "\n" VT_RST
+                        "    fmt      = %s"                             "\n"
+                        "    siz      = %s"                             "\n"
+                        "    line     = %d"                             "\n"
+                        "    tmem     = 0x%03X (0x%03X)"                "\n"
+                        "    pal      = %d"                             "\n"
+                        "    flags(s) = (%s, %s, %s)"                   "\n"
+                        "    flags(t) = (%s, %s, %s)"                   "\n"
+                        "    size     = (%.2f, %.2f, %.2f, %.2f)"       "\n",
+                        // clang-format on
+                        tile, state.last_tile_assignments[tile], tex_fmt_str(tile_desc->fmt),
+                        tex_siz_str(tile_desc->siz), tile_desc->line, tile_desc->tmem, tile_desc->tmem * 8,
+                        tile_desc->palette, tex_clamp_wrap_mirror_str(tile_desc->cms), tex_mask_str(tile_desc->masks),
+                        tex_shift_str(tile_desc->shifts), tex_clamp_wrap_mirror_str(tile_desc->cmt),
+                        tex_mask_str(tile_desc->maskt), tex_shift_str(tile_desc->shiftt), tile_desc->uls / 4.0f,
+                        tile_desc->ult / 4.0f, tile_desc->lrs / 4.0f, tile_desc->lrt / 4.0f);
+            }
+        }
     }
 
     fflush(print_out);

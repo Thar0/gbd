@@ -21,6 +21,7 @@ DEFINE_ERROR(INVALID_TIMG_FMTSIZ, "Invalid texture image format/size combination
 DEFINE_ERROR(VTX_LOADING_ZERO, "Vertex count cannot be zero")
 DEFINE_ERROR(VTX_LOADING_TOO_MANY, "Loading too many vertices")
 DEFINE_ERROR(VTX_CACHE_OVERFLOW, "Loading %d vertices at position %d overflows the vertex cache")
+DEFINE_ERROR(VTX_CACHE_UNDERFLOW, "Loading vertices at position %d is out of bounds of the vertex cache")
 DEFINE_ERROR(FILLMODE_4B, "Rendering primitives to a 4-bit color image is prohibited in FILL mode")
 DEFINE_ERROR(COPYMODE_32B, "Rendering primitives to a 32-bit color image is prohibited in COPY mode")
 DEFINE_ERROR(SCISSOR_UNSET, "Scissor must be set before rendering primitives")
@@ -43,11 +44,12 @@ DEFINE_ERROR(COPYMODE_ZIMG_WR_PER_PIXEL, "Per-pixel depth image updates are proh
 DEFINE_ERROR(COPYMODE_AA, "Anti-aliasing is unavailable in COPY mode")
 DEFINE_ERROR(COPYMODE_BL_SET, "Blender pipeline stages are skipped in COPY mode")
 DEFINE_ERROR(COPYMODE_TEXTURE_FILTER, "Texture filtering is unavailable in COPY mode")
-DEFINE_ERROR(TILEDESC_BAD, "bad tile descriptor")
+DEFINE_ERROR(TILEDESC_BAD, "Bad tile index %d")
+DEFINE_ERROR(TILEDESC_USED_BUT_NOT_SET, "Tile %d used for rendering but was never set")
 DEFINE_ERROR(CI_RENDER_TILE_NO_TLUT,
-             "Render tile is color-indexed but TLUT mode was not enabled in other modes before drawing")
+             "Render tile %d is color-indexed but TLUT mode was not enabled in other modes before drawing")
 DEFINE_ERROR(NO_CI_RENDER_TILE_TLUT,
-             "Render tile is not color-indexed but TLUT mode was enabled in other modes before drawing")
+             "Render tile %d is not color-indexed but TLUT mode was enabled in other modes before drawing")
 DEFINE_ERROR(COPYMODE_MISMATCH_8B, "4b and 8b images can only be copied to an 8b color image")
 DEFINE_ERROR(COPYMODE_MISMATCH_16B, "16b images can only be copied to a 16b color image")
 DEFINE_ERROR(TRI_VTX_OOB, "triangle %d indexed out of bounds vertices")

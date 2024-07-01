@@ -47,7 +47,7 @@ rdram_file_pos(void)
 static bool
 rdram_file_addr_valid(uint32_t addr)
 {
-    return addr < rdram_file_size;
+    return addr < (unsigned long)rdram_file_size;
 }
 
 static size_t

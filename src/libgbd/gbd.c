@@ -539,17 +539,20 @@ cc_str(unsigned int v, int i)
 void
 print_cc(FILE *print_out, uint32_t cc_hi, uint32_t cc_lo)
 {
+    struct cc_conf cc;
+    cc_decode(&cc, cc_hi, cc_lo);
+
+    // clang-format off
     fprintf(print_out,
             "%s, %s, %s, %s, "
             "%s, %s, %s, %s, "
             "%s, %s, %s, %s, "
             "%s, %s, %s, %s",
-            cc_str(SHIFTR(cc_hi, 4, 20), 0), cc_str(SHIFTR(cc_lo, 4, 28), 1), cc_str(SHIFTR(cc_hi, 5, 15), 2),
-            cc_str(SHIFTR(cc_lo, 3, 15), 3), cc_str(SHIFTR(cc_hi, 3, 12), 4), cc_str(SHIFTR(cc_lo, 3, 12), 5),
-            cc_str(SHIFTR(cc_hi, 3, 9), 6), cc_str(SHIFTR(cc_lo, 3, 9), 7), cc_str(SHIFTR(cc_hi, 4, 5), 8),
-            cc_str(SHIFTR(cc_lo, 4, 24), 9), cc_str(SHIFTR(cc_hi, 5, 0), 10), cc_str(SHIFTR(cc_lo, 3, 6), 11),
-            cc_str(SHIFTR(cc_lo, 3, 21), 12), cc_str(SHIFTR(cc_lo, 3, 3), 13), cc_str(SHIFTR(cc_lo, 3, 18), 14),
-            cc_str(SHIFTR(cc_lo, 3, 0), 15));
+            cc_str(cc. a0,  0), cc_str(cc. b0,  1), cc_str(cc. c0,  2), cc_str(cc. d0,  3),
+            cc_str(cc.Aa0,  4), cc_str(cc.Ab0,  5), cc_str(cc.Ac0,  6), cc_str(cc.Ad0,  7),
+            cc_str(cc. a1,  8), cc_str(cc. b1,  9), cc_str(cc. c1, 10), cc_str(cc. d1, 11),
+            cc_str(cc.Aa1, 12), cc_str(cc.Ab1, 13), cc_str(cc.Ac1, 14), cc_str(cc.Ad1, 15));
+    // clang-format on
 }
 
 void
@@ -723,7 +726,7 @@ print_rm_mode(FILE *print_out, uint32_t arg)
     if (n > 0)
         n += fprintf(print_out, " | ");
 
-    switch (arg & 0x00000300) {
+    switch (arg & CVG_DST_MASK) {
         case CVG_DST_CLAMP:
             n += fprintf(print_out, "CVG_DST_CLAMP");
             break;
@@ -737,7 +740,7 @@ print_rm_mode(FILE *print_out, uint32_t arg)
             n += fprintf(print_out, "CVG_DST_SAVE");
             break;
     }
-    switch (arg & 0x00000C00) {
+    switch (arg & ZMODE_MASK) {
         case ZMODE_OPA:
             n += fprintf(print_out, " | ZMODE_OPA");
             break;
@@ -1304,7 +1307,7 @@ f_to_qs1616(int16_t *int_out, uint16_t *frac_out, float f)
 static inline float
 qs1616_to_f(int16_t int_part, uint16_t frac_part)
 {
-    return ((int_part << 16) | (frac_part)) / (float)0x10000;
+    return ((int_part << 16) | frac_part) / (float)0x10000;
 }
 
 void
@@ -1376,41 +1379,6 @@ chk_Range(gfx_state_t *state, uint32_t addr, size_t len)
         ARG_CHECK(state, addr_in_rdram(state, addr + len), GW_RANGE_NOT_IN_RDRAM);
 
     return 0;
-}
-
-static bool
-chk_ValidImgFmt(int fmt)
-{
-    switch (fmt) {
-        case G_IM_FMT_RGBA:
-        case G_IM_FMT_YUV:
-        case G_IM_FMT_CI:
-        case G_IM_FMT_IA:
-        case G_IM_FMT_I:
-            return true;
-    }
-    return false;
-}
-
-static bool
-chk_ValidImgFmtSiz(int fmt, int siz)
-{
-    switch (FMT_SIZ(fmt, siz)) {
-        case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_32b):
-        case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_16b):
-        case FMT_SIZ(G_IM_FMT_YUV, G_IM_SIZ_16b):
-        case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_16b):
-        case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_8b):
-        case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_4b):
-        case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_16b): // loadblock
-        case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_8b):
-        case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_4b):
-        case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_16b): // loadblock
-        case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_8b):
-        case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_4b):
-            return true;
-    }
-    return false;
 }
 
 static int
@@ -1734,17 +1702,28 @@ chk_DPSetColorImage(gfx_state_t *state)
 
     CHECK_PIPESYNC(state);
 
-    ARG_CHECK(state, chk_ValidImgFmt(fmt), GW_INVALID_CIMG_FMT);
-
-    // We don't know the height of the color image, so can't check range
+    // We don't know the height of the color image, so can't check a full range
     chk_Range(state, cimg_phys, 0);
 
     ARG_CHECK(state, cimg_phys % 64 == 0, GW_BAD_CIMG_ALIGNMENT);
 
     switch (FMT_SIZ(fmt, siz)) {
+        // Valid cases:
         case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_32b):
+            // For 32-bit sizes, the format is fixed at 8-bit per component
+            break;
         case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_16b):
+            // For 16-bit sizes, the format is fixed at 5-bit per component
+            break;
         case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_8b):
+            // For 8-bit sizes, the format alternates 8-bit red, 8-bit green, etc.
+            break;
+
+        // Invalid cases:
+        case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_8b):
+            // This is invalid but is common enough (due to the N64 programming manual supporting it..) that
+            // we let this be a warning rather than an error
+            ARG_CHECK(state, 0, GW_CI_CIMG_FMTSIZ);
             break;
         default:
             ARG_CHECK(state, 0, GW_INVALID_CIMG_FMTSIZ);
@@ -1779,6 +1758,41 @@ chk_DPSetDepthImage(gfx_state_t *state)
     state->last_zimg.addr = zimg_phys;
     state->zimg_set       = true;
     return 0;
+}
+
+static bool
+chk_ValidImgFmt(int fmt)
+{
+    switch (fmt) {
+        case G_IM_FMT_RGBA:
+        case G_IM_FMT_YUV:
+        case G_IM_FMT_CI:
+        case G_IM_FMT_IA:
+        case G_IM_FMT_I:
+            return true;
+    }
+    return false;
+}
+
+static bool
+chk_ValidImgFmtSiz(int fmt, int siz)
+{
+    switch (FMT_SIZ(fmt, siz)) {
+        case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_32b):
+        case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_16b):
+        case FMT_SIZ(G_IM_FMT_YUV, G_IM_SIZ_16b):
+        case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_16b):
+        case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_8b):
+        case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_4b):
+        case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_16b): // loadblock
+        case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_8b):
+        case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_4b):
+        case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_16b): // loadblock
+        case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_8b):
+        case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_4b):
+            return true;
+    }
+    return false;
 }
 
 static int
@@ -1836,7 +1850,7 @@ print_vtx(gfx_state_t *state, uint32_t vtx_addr, int v0, int num)
     state->rdram->seek(vtx_addr);
 
     for (int i = 0; i < num; i++) {
-        if (v0 + num >= VTX_CACHE_SIZE) {
+        if (v0 + i >= VTX_CACHE_SIZE) {
             // Don't process anything that's out of bounds
             break;
         }
@@ -3157,7 +3171,8 @@ chk_SPModifyVertex(gfx_state_t *state)
 static int
 chk_SPPerspNormalize(gfx_state_t *state)
 {
-    int wscale        = gfxd_arg_value(0)->u;
+    int wscale = gfxd_arg_value(0)->u;
+
     state->persp_norm = ((float)wscale) / 0x10000;
     return 0;
 }
@@ -4273,7 +4288,7 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
         .render_tile         = G_TX_RENDERTILE,
         .render_tile_on      = false,
         .last_loaded_vtx_num = 0,
-        .persp_norm          = 1.0,
+        .persp_norm          = 1.0f,
         .geometry_mode       = G_CLIPPING,
         .dl_stack_top        = -1,
         .scissor_set         = false,

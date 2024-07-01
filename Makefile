@@ -2,18 +2,20 @@ TARGET ?= linux64
 
 ICONV_VERSION := libiconv-1.16
 
+BUILD_DIR := build/$(TARGET)
+
 ifeq ($(TARGET),windows)
-	LIBGBD_STATIC := build/libgbd.lib
-	LIBGBD_SHARED := build/libgbd.dll
-	TARGET_BINARY := build/gbd.exe
+	LIBGBD_STATIC := $(BUILD_DIR)/libgbd.lib
+	LIBGBD_SHARED := $(BUILD_DIR)/libgbd.dll
+	TARGET_BINARY := $(BUILD_DIR)/gbd.exe
 	CC := x86_64-w64-mingw32-gcc
 	DEFS := -D WINDOWS
 	ICONV_PREFIX := libiconv/windows
 	ICONV_CFG := build_libtool_need_lc=no archive_cmds_need_lc=no
 else
-	LIBGBD_STATIC := build/libgbd.a
-	LIBGBD_SHARED := build/libgbd.so
-	TARGET_BINARY := build/gbd
+	LIBGBD_STATIC := $(BUILD_DIR)/libgbd.a
+	LIBGBD_SHARED := $(BUILD_DIR)/libgbd.so
+	TARGET_BINARY := $(BUILD_DIR)/gbd
 	CC := gcc
 	DEFS := -D __LINUX__
 	ICONV_PREFIX := libiconv/linux
@@ -26,32 +28,35 @@ CLANG_FORMAT := clang-format-14
 FORMAT_ARGS := -i -style=file
 
 ICONV := $(ICONV_PREFIX)/lib/libiconv.a
-LIBGFXD := build/libgfxd.a
+LIBGFXD := $(BUILD_DIR)/libgfxd.a
 CFLAGS := -Og -g3 -Wall -Wextra -Wno-unused-parameter -Wno-unused-variable -Wno-unused-function -ffunction-sections -fdata-sections
 
 # libgbd (the implementation for gbd)
 SRC_DIRS_LIBGBD := $(shell find src/libgbd -type d)
 C_FILES_LIBGBD := $(foreach dir,$(SRC_DIRS_LIBGBD),$(wildcard $(dir)/*.c))
-O_FILES_LIBGBD := $(C_FILES_LIBGBD:%.c=build/%.o)
+O_FILES_LIBGBD := $(C_FILES_LIBGBD:%.c=$(BUILD_DIR)/%.o)
 
 # gbd front-end (command line utility)
 SRC_DIRS_GBD := $(shell find src/gbd -type d)
 C_FILES_GBD := $(foreach dir,$(SRC_DIRS_GBD),$(wildcard $(dir)/*.c))
-O_FILES_GBD := $(C_FILES_GBD:%.c=build/%.o)
+O_FILES_GBD := $(C_FILES_GBD:%.c=$(BUILD_DIR)/%.o)
 
 DEP_FILES := $(O_FILES_LIBGBD:.o=.d) $(O_FILES_GBD:.o=.d)
 
-$(shell mkdir -p $(SRC_DIRS_LIBGBD:%=build/%) $(SRC_DIRS_GBD:%=build/%))
+$(shell mkdir -p $(SRC_DIRS_LIBGBD:%=$(BUILD_DIR)/%) $(SRC_DIRS_GBD:%=$(BUILD_DIR)/%))
 
-.PHONY: all clean format libiconv
+.PHONY: all clean clean-all distclean format libiconv
 .DEFAULT_GOAL := all
 
 all: $(LIBGBD_STATIC) $(LIBGBD_SHARED) $(TARGET_BINARY)
 
 clean:
+	$(RM) -rf $(BUILD_DIR)
+
+clean-all:
 	$(RM) -rf build
 
-distclean: clean
+distclean: clean-all
 	$(RM) -r $(ICONV_PREFIX)
 
 format:
@@ -79,9 +84,9 @@ $(LIBGFXD): $(shell find libgfxd -type f -name "*.[ch]")
 	$(MAKE) -C libgfxd CFLAGS='-O2 -fPIC'
 	mv libgfxd/libgfxd.a $@
 
-build/src/libgbd/%.o: CFLAGS += -fPIC
+$(BUILD_DIR)/src/libgbd/%.o: CFLAGS += -fPIC
 
-build/src/%.o: src/%.c
+$(BUILD_DIR)/src/%.o: src/%.c
 	$(CC) $(DEFS) $(CFLAGS) -MMD -I. -Iinclude -c $< -o $@
 
 -include $(DEP_FILES)

@@ -15,7 +15,7 @@ static int
 rdram_file_seek(uint32_t addr);
 
 static FILE *rdram_file_file;
-static long rdram_file_size;
+static long  rdram_file_size;
 
 static int
 rdram_file_close(void)

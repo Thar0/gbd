@@ -7,10 +7,10 @@ typedef struct Vector {
     size_t elemSize;
     size_t limit;
     size_t capacity;
-    void *start;
-    void *end;
-    void *rstart;
-    void *rend;
+    void  *start;
+    void  *end;
+    void  *rstart;
+    void  *rend;
 } Vector;
 
 #define VECTOR_FOR_EACH_ELEMENT(vector, element) \

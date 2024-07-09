@@ -60,7 +60,7 @@ clean-all:
 distclean: clean-all
 	$(RM) -r $(ICONV_PREFIX)
 
-FORMAT_FILES := $(shell find src -type f -name "*.[ch]")
+FORMAT_FILES := $(shell find src -type f -name "*.[ch]") $(shell find include -type f -name "*.h")
 format:
 	$(CLANG_FORMAT) $(FORMAT_ARGS) $(FORMAT_FILES)
 # Trim trailing whitespace

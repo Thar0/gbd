@@ -49,7 +49,7 @@ main(int argc, char **argv)
         .q_macros = true,
     };
 
-    const char *file_name = NULL;
+    const char                *file_name = NULL;
     struct start_location_info start_location;
 
     if (argc < 3)
@@ -88,7 +88,7 @@ main(int argc, char **argv)
                     start_location.type               = USE_START_ADDR_AT_POINTER;
                     start_location.start_location_ptr = WORK_DISP_PTR;
                 } else {
-                    char *addr_str;
+                    char     *addr_str;
                     uint32_t *addrp;
 
                     if (argv[i][0] == '*') {

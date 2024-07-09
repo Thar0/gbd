@@ -9,6 +9,7 @@ AlignArrayOfStructures: Left
 SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatementsExceptControlMacros
 Cpp11BracedListStyle: false
+IndentCaseBlocks: true
 IndentCaseLabels: true
 BinPackArguments: true
 BinPackParameters: true
@@ -27,4 +28,5 @@ AlignTrailingComments: true
 SortIncludes: false
 IndentPPDirectives: AfterHash
 AlignConsecutiveAssignments: AcrossComments
+AlignConsecutiveDeclarations: AcrossComments
 AlignConsecutiveMacros: Consecutive

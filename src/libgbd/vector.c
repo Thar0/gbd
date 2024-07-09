@@ -34,7 +34,7 @@ int
 vector_reserve(Vector *vector, size_t num)
 {
     uint8_t *newData;
-    size_t newCapacity = vector->limit + num;
+    size_t   newCapacity = vector->limit + num;
 
     if (newCapacity <= vector->capacity)
         return 1;
@@ -123,8 +123,8 @@ vector_delete(Vector *vector, size_t position, size_t num)
 int
 vector_resize(Vector *vector)
 {
-    size_t newCapacity = vector->limit;
-    uint8_t *newData   = realloc(vector->start, vector->elemSize * newCapacity);
+    size_t   newCapacity = vector->limit;
+    uint8_t *newData     = realloc(vector->start, vector->elemSize * newCapacity);
 
     if (newCapacity > 0 && newData == NULL)
         return -1;

@@ -114,47 +114,47 @@ cc_decode(struct cc_conf *out, uint32_t hi, uint32_t lo)
 
 typedef struct {
     // gDPSetTile
-    int fmt;       /* texture image format */
-    int siz;       /* pixel size */
-    int line;      /* Size of one row (s) of the texture tile (9-bit) */
-    uint16_t tmem; /* tmem address of texture tile origin (9-bit) */
-    int palette;   /* position of palette for 4-bit CI (4-bit) */
-    unsigned cms;  /* s-axis flags */
-    unsigned cmt;  /* t-axis flags */
-    int masks;     /* s-axis mask */
-    int maskt;     /* t-axis mask */
-    int shifts;    /* s-axis shift */
-    int shiftt;    /* t-axis shift */
+    int      fmt;     /* texture image format */
+    int      siz;     /* pixel size */
+    int      line;    /* Size of one row (s) of the texture tile (9-bit) */
+    uint16_t tmem;    /* tmem address of texture tile origin (9-bit) */
+    int      palette; /* position of palette for 4-bit CI (4-bit) */
+    unsigned cms;     /* s-axis flags */
+    unsigned cmt;     /* t-axis flags */
+    int      masks;   /* s-axis mask */
+    int      maskt;   /* t-axis mask */
+    int      shifts;  /* s-axis shift */
+    int      shiftt;  /* t-axis shift */
     // gDPSetTileSize
-    qu102_t uls; /* tile upper-left s-coordinate */
-    qu102_t ult; /* tile upper-left t-coordinate */
-    qu102_t lrs; /* tile lower-right s-coordinate */
-    qu102_t lrt; /* tile lower-right t-coordinate */
+    qu102_t  uls; /* tile upper-left s-coordinate */
+    qu102_t  ult; /* tile upper-left t-coordinate */
+    qu102_t  lrs; /* tile lower-right s-coordinate */
+    qu102_t  lrt; /* tile lower-right t-coordinate */
 } tile_descriptor_t;
 
 typedef struct {
     uint32_t str_addr;
-    int line_no;
-    int dl_stack_top;
+    int      line_no;
+    int      dl_stack_top;
 } DispEntry;
 
 #define VTX_CACHE_SIZE 32
 
 typedef struct {
     // Options
-    gbd_options_t *options;
+    gbd_options_t        *options;
+    gfx_ucode_registry_t *ucodes;
 
     // Task
-    gfx_ucode_registry_t *ucodes;
     gfxd_ucode_t next_ucode;
-    long gfx_addr;
-    int n_gfx;
-    bool task_done;
-    bool pipeline_crashed;
-    bool hit_invalid; // whether we hit invalid commands when we crashed
-    int multi_packet;
-    char multi_packet_name[32];
-    ObStack disp_stack;
+    long         gfx_addr;
+    int          n_gfx;
+    bool         task_done;
+    bool         pipeline_crashed;
+    bool         hit_invalid; // whether we hit invalid commands when we crashed
+    int          multi_packet;
+    char         multi_packet_name[32];
+    ObStack      disp_stack;
 
     int last_combiner_cmd_num;
     int last_geometry_mode_cmd_num;
@@ -164,31 +164,31 @@ typedef struct {
     // RSP
     uint16_t segment_set_bits;
     uint32_t segment_table[16];
-    int last_gfx_pkt_count;
-    int render_tile;
-    bool render_tile_on;
-    int render_tile_level;
+    int      last_gfx_pkt_count;
+    int      render_tile;
+    bool     render_tile_on;
+    int      render_tile_level;
     uint16_t tex_s_scale;
     uint16_t tex_t_scale;
-    MtxF projection_mtx;
-    MtxF mvp_mtx;
-    float persp_norm;
+    MtxF     projection_mtx;
+    MtxF     mvp_mtx;
+    float    persp_norm;
     uint32_t geometry_mode;
     uint32_t dl_stack_ra[18]; // Microcode maintains a return address stack
     uint32_t dl_stack_pc[18]; // We maintain a pc stack in addition
-    int dl_stack_cmd_nums[18];
-    int dl_stack_top;
-    Vp cur_vp;
-    int last_loaded_vtx_num;
-    ObStack mtx_stack;
-    int matrix_stack_depth;
-    bool matrix_projection_set;
-    bool matrix_modelview_set;
+    int      dl_stack_cmd_nums[18];
+    int      dl_stack_top;
+    Vp       cur_vp;
+    int      last_loaded_vtx_num;
+    ObStack  mtx_stack;
+    int      matrix_stack_depth;
+    bool     matrix_projection_set;
+    bool     matrix_modelview_set;
     uint32_t sp_dram_stack_size;
 
-    int vtx_clipcodes[VTX_CACHE_SIZE];
+    int      vtx_clipcodes[VTX_CACHE_SIZE];
     uint16_t vtx_depths[VTX_CACHE_SIZE];
-    float vtx_w[VTX_CACHE_SIZE];
+    float    vtx_w[VTX_CACHE_SIZE];
 
     int ex3_mat_cull_mode;
 
@@ -200,37 +200,37 @@ typedef struct {
         qu102_t lrx;
         qu102_t lry;
     } scissor;
-    bool scissor_set;
-    bool cimg_scissor_valid;
-    uint32_t othermode_hi;
-    uint32_t othermode_lo;
+    bool           scissor_set;
+    bool           cimg_scissor_valid;
+    uint32_t       othermode_hi;
+    uint32_t       othermode_lo;
     struct bl_conf bl;
-    uint32_t combiner_hi;
-    uint32_t combiner_lo;
+    uint32_t       combiner_hi;
+    uint32_t       combiner_lo;
     struct cc_conf cc;
-    bool pipe_busy;
-    unsigned char tile_busy[8];
-    bool load_busy;
-    bool fullsync;
+    bool           pipe_busy;
+    unsigned char  tile_busy[8];
+    bool           load_busy;
+    bool           fullsync;
     struct {
         uint32_t addr;
     } last_zimg;
     bool zimg_set;
     struct {
-        int fmt;
-        int siz;
+        int      fmt;
+        int      siz;
         uint32_t width;
         uint32_t addr;
     } last_cimg;
     bool cimg_set;
     struct {
-        int fmt;
-        int siz;
+        int      fmt;
+        int      siz;
         uint32_t width;
         uint32_t addr;
     } last_timg;
     uint32_t fill_color;
-    bool fill_color_set;
+    bool     fill_color_set;
 
     // RDRAM
     rdram_interface_t *rdram;
@@ -402,10 +402,10 @@ void
 print_string(gfx_state_t *state, uint32_t str_addr, fprint_fn pfn, FILE *file)
 {
     iconv_t cd;
-    char c;
-    char *in_buf, *out_buf, *iconv_in_buf, *iconv_out_buf;
-    size_t in_bytes_tot, out_bytes_max, in_bytes_left, out_bytes_left;
-    size_t str_len = 0;
+    char    c;
+    char   *in_buf, *out_buf, *iconv_in_buf, *iconv_out_buf;
+    size_t  in_bytes_tot, out_bytes_max, in_bytes_left, out_bytes_left;
+    size_t  str_len = 0;
 
     /* determine the length of the string */
     state->rdram->seek(str_addr);
@@ -693,70 +693,81 @@ cc_str(unsigned int v, int i)
     switch (i) {
         case 0: /* CC 1 A */
         case 8: /* CC 2 A */
-        {
-            static const char *cc1a[] = {
-                "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "1", "NOISE",
-            };
-            if (v >= ARRAY_COUNT(cc1a))
-                return "0";
-            return cc1a[v];
-        } break;
+            {
+                static const char *cc1a[] = {
+                    "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "1", "NOISE",
+                };
+                if (v >= ARRAY_COUNT(cc1a))
+                    return "0";
+                return cc1a[v];
+            }
+            break;
+
         case 1: /* CC 1 B */
         case 9: /* CC 2 B */
-        {
-            static const char *cc1b[] = {
-                "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "CENTER", "K4",
-            };
-            if (v >= ARRAY_COUNT(cc1b))
-                return "0";
-            return cc1b[v];
-        } break;
+            {
+                static const char *cc1b[] = {
+                    "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "CENTER", "K4",
+                };
+                if (v >= ARRAY_COUNT(cc1b))
+                    return "0";
+                return cc1b[v];
+            }
+            break;
+
         case 2:  /* CC 1 C */
         case 10: /* CC 2 C */
-        {
-            static const char *cc1c[] = {
-                "COMBINED",  "TEXEL0",         "TEXEL1",        "PRIMiTIVE",    "SHADE",           "ENVIRONMENT",
-                "CENTER",    "COMBINED_ALPHA", "TEXEL0_ALPHA",  "TEXEL1_ALPHA", "PRIMITIVE_ALPHA", "SHADE_ALPHA",
-                "ENV_ALPHA", "LOD_FRACTION",   "PRIM_LOD_FRAC", "K5",
-            };
-            if (v >= ARRAY_COUNT(cc1c))
-                return "0";
-            return cc1c[v];
-        } break;
+            {
+                static const char *cc1c[] = {
+                    "COMBINED",  "TEXEL0",         "TEXEL1",        "PRIMiTIVE",    "SHADE",           "ENVIRONMENT",
+                    "CENTER",    "COMBINED_ALPHA", "TEXEL0_ALPHA",  "TEXEL1_ALPHA", "PRIMITIVE_ALPHA", "SHADE_ALPHA",
+                    "ENV_ALPHA", "LOD_FRACTION",   "PRIM_LOD_FRAC", "K5",
+                };
+                if (v >= ARRAY_COUNT(cc1c))
+                    return "0";
+                return cc1c[v];
+            }
+            break;
+
         case 3:  /* CC 1 D */
         case 11: /* CC 2 D */
-        {
-            static const char *cc1d[] = {
-                "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "1",
-            };
-            if (v >= ARRAY_COUNT(cc1d))
-                return "0";
-            return cc1d[v];
-        } break;
+            {
+                static const char *cc1d[] = {
+                    "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "1",
+                };
+                if (v >= ARRAY_COUNT(cc1d))
+                    return "0";
+                return cc1d[v];
+            }
+            break;
+
         case 4:  /* AC 1 A */
         case 12: /* AC 2 A */
         case 5:  /* AC 1 B */
         case 13: /* AC 2 B */
         case 7:  /* AC 1 D */
         case 15: /* AC 2 D */
-        {
-            static const char *ac1abd[] = {
-                "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "1",
-            };
-            if (v >= ARRAY_COUNT(ac1abd))
-                return "0";
-            return ac1abd[v];
-        } break;
+            {
+                static const char *ac1abd[] = {
+                    "COMBINED", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "1",
+                };
+                if (v >= ARRAY_COUNT(ac1abd))
+                    return "0";
+                return ac1abd[v];
+            }
+            break;
+
         case 6:  /* AC 1 C */
         case 14: /* AC 2 C */
-        {
-            static const char *ac1c[] = {
-                "LOD_FRACTION", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "PRIM_LOD_FRAC",
-            };
-            if (v >= ARRAY_COUNT(ac1c))
-                return "0";
-            return ac1c[v];
-        } break;
+            {
+                static const char *ac1c[] = {
+                    "LOD_FRACTION", "TEXEL0", "TEXEL1", "PRIMITIVE", "SHADE", "ENVIRONMENT", "PRIM_LOD_FRAC",
+                };
+                if (v >= ARRAY_COUNT(ac1c))
+                    return "0";
+                return ac1c[v];
+            }
+            break;
     }
     return "?";
 }
@@ -955,12 +966,15 @@ print_rm_mode(FILE *print_out, uint32_t arg)
         case CVG_DST_CLAMP:
             n += fprintf(print_out, "CVG_DST_CLAMP");
             break;
+
         case CVG_DST_WRAP:
             n += fprintf(print_out, "CVG_DST_WRAP");
             break;
+
         case CVG_DST_FULL:
             n += fprintf(print_out, "CVG_DST_FULL");
             break;
+
         case CVG_DST_SAVE:
             n += fprintf(print_out, "CVG_DST_SAVE");
             break;
@@ -969,12 +983,15 @@ print_rm_mode(FILE *print_out, uint32_t arg)
         case ZMODE_OPA:
             n += fprintf(print_out, " | ZMODE_OPA");
             break;
+
         case ZMODE_INTER:
             n += fprintf(print_out, " | ZMODE_INTER");
             break;
+
         case ZMODE_XLU:
             n += fprintf(print_out, " | ZMODE_XLU");
             break;
+
         case ZMODE_DEC:
             n += fprintf(print_out, " | ZMODE_DEC");
             break;
@@ -1003,12 +1020,15 @@ print_rm_cbl(FILE *print_out, uint32_t arg, int c)
         case G_BL_CLR_IN:
             n += fprintf(print_out, "GBL_c%i(G_BL_CLR_IN", c);
             break;
+
         case G_BL_CLR_MEM:
             n += fprintf(print_out, "GBL_c%i(G_BL_CLR_MEM", c);
             break;
+
         case G_BL_CLR_BL:
             n += fprintf(print_out, "GBL_c%i(G_BL_CLR_BL", c);
             break;
+
         case G_BL_CLR_FOG:
             n += fprintf(print_out, "GBL_c%i(G_BL_CLR_FOG", c);
             break;
@@ -1017,12 +1037,15 @@ print_rm_cbl(FILE *print_out, uint32_t arg, int c)
         case G_BL_A_IN:
             n += fprintf(print_out, ", G_BL_A_IN");
             break;
+
         case G_BL_A_FOG:
             n += fprintf(print_out, ", G_BL_A_FOG");
             break;
+
         case G_BL_A_SHADE:
             n += fprintf(print_out, ", G_BL_A_SHADE");
             break;
+
         case G_BL_0:
             n += fprintf(print_out, ", G_BL_0");
             break;
@@ -1031,12 +1054,15 @@ print_rm_cbl(FILE *print_out, uint32_t arg, int c)
         case G_BL_CLR_IN:
             n += fprintf(print_out, ", G_BL_CLR_IN");
             break;
+
         case G_BL_CLR_MEM:
             n += fprintf(print_out, ", G_BL_CLR_MEM");
             break;
+
         case G_BL_CLR_BL:
             n += fprintf(print_out, ", G_BL_CLR_BL");
             break;
+
         case G_BL_CLR_FOG:
             n += fprintf(print_out, ", G_BL_CLR_FOG");
             break;
@@ -1045,12 +1071,15 @@ print_rm_cbl(FILE *print_out, uint32_t arg, int c)
         case G_BL_1MA:
             n += fprintf(print_out, ", G_BL_1MA)");
             break;
+
         case G_BL_A_MEM:
             n += fprintf(print_out, ", G_BL_A_MEM)");
             break;
+
         case G_BL_1:
             n += fprintf(print_out, ", G_BL_1)");
             break;
+
         case G_BL_0:
             n += fprintf(print_out, ", G_BL_0)");
             break;
@@ -1285,142 +1314,171 @@ draw_last_timg(gfx_state_t *state, uint32_t timg, int fmt, int siz, int height, 
 
     for (int i = 0; i < height; i++) {
         for (int j = 0; j < width; j++) {
-            switch (fmt_siz) // TODO implement transparency in some way for all of these
-            {
-                case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_4b): {
-                    uint8_t i4_px_x2;
+            // TODO implement transparency in some way for all of these
+            switch (fmt_siz) {
+                case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_4b):
+                    {
+                        uint8_t i4_px_x2;
 
-                    if (state->rdram->read(&i4_px_x2, sizeof(uint8_t), 1) != 1)
-                        goto read_err;
+                        if (state->rdram->read(&i4_px_x2, sizeof(uint8_t), 1) != 1)
+                            goto read_err;
 
-                    PRINT_PX(CVT_PX(i4_px_x2, 4, 15), CVT_PX(i4_px_x2, 4, 15), CVT_PX(i4_px_x2, 4, 15));
-                    j++; // TODO what happens if these 4-bit textures have an odd width?
-                    PRINT_PX(CVT_PX(i4_px_x2, 0, 15), CVT_PX(i4_px_x2, 0, 15), CVT_PX(i4_px_x2, 0, 15));
-                } break;
-                case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_4b): {
-                    uint8_t ia4_px_x2;
+                        PRINT_PX(CVT_PX(i4_px_x2, 4, 15), CVT_PX(i4_px_x2, 4, 15), CVT_PX(i4_px_x2, 4, 15));
+                        j++; // TODO what happens if these 4-bit textures have an odd width?
+                        PRINT_PX(CVT_PX(i4_px_x2, 0, 15), CVT_PX(i4_px_x2, 0, 15), CVT_PX(i4_px_x2, 0, 15));
+                    }
+                    break;
 
-                    if (state->rdram->read(&ia4_px_x2, sizeof(uint8_t), 1) != 1)
-                        goto read_err;
+                case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_4b):
+                    {
+                        uint8_t ia4_px_x2;
 
-                    PRINT_PX(CVT_PX(ia4_px_x2, 5, 7), CVT_PX(ia4_px_x2, 5, 7), CVT_PX(ia4_px_x2, 5, 7));
-                    j++;
-                    PRINT_PX(CVT_PX(ia4_px_x2, 1, 7), CVT_PX(ia4_px_x2, 1, 7), CVT_PX(ia4_px_x2, 1, 7));
-                } break;
-                case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_4b): {
-                    // TODO previewing of CI4/CI8 textures is unreliable as the TLUT may be loaded after the index
-                    // data
-                    if (tlut == 0 || tlut_type == G_TT_NONE)
-                        goto no_preview;
+                        if (state->rdram->read(&ia4_px_x2, sizeof(uint8_t), 1) != 1)
+                            goto read_err;
 
-                    uint8_t ci8_i_x2;
+                        PRINT_PX(CVT_PX(ia4_px_x2, 5, 7), CVT_PX(ia4_px_x2, 5, 7), CVT_PX(ia4_px_x2, 5, 7));
+                        j++;
+                        PRINT_PX(CVT_PX(ia4_px_x2, 1, 7), CVT_PX(ia4_px_x2, 1, 7), CVT_PX(ia4_px_x2, 1, 7));
+                    }
+                    break;
 
-                    if (state->rdram->read(&ci8_i_x2, sizeof(uint8_t), 1) != 1)
-                        goto read_err;
+                case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_4b):
+                    {
+                        // TODO previewing of CI4/CI8 textures is unreliable as the TLUT may be loaded after the index
+                        // data
+                        if (tlut == 0 || tlut_type == G_TT_NONE)
+                            goto no_preview;
 
-                    uint16_t tlut_pxs[2];
+                        uint8_t ci8_i_x2;
 
-                    uint32_t save_pos = state->rdram->pos();
-                    state->rdram->seek(tlut + sizeof(uint16_t) * (ci8_i_x2 >> 4));
-                    if (state->rdram->read(&tlut_pxs[0], sizeof(uint16_t), 1) != 1)
-                        goto read_err;
-                    state->rdram->seek(tlut + sizeof(uint16_t) * (ci8_i_x2 & 0xF));
-                    if (state->rdram->read(&tlut_pxs[1], sizeof(uint16_t), 1) != 1)
-                        goto read_err;
-                    state->rdram->seek(save_pos);
+                        if (state->rdram->read(&ci8_i_x2, sizeof(uint8_t), 1) != 1)
+                            goto read_err;
 
-                    for (int k = 0; k < 2; k++) {
-                        uint16_t tlut_px = BSWAP16(tlut_pxs[k]);
+                        uint16_t tlut_pxs[2];
+
+                        uint32_t save_pos = state->rdram->pos();
+                        state->rdram->seek(tlut + sizeof(uint16_t) * (ci8_i_x2 >> 4));
+                        if (state->rdram->read(&tlut_pxs[0], sizeof(uint16_t), 1) != 1)
+                            goto read_err;
+                        state->rdram->seek(tlut + sizeof(uint16_t) * (ci8_i_x2 & 0xF));
+                        if (state->rdram->read(&tlut_pxs[1], sizeof(uint16_t), 1) != 1)
+                            goto read_err;
+                        state->rdram->seek(save_pos);
+
+                        for (int k = 0; k < 2; k++) {
+                            uint16_t tlut_px = BSWAP16(tlut_pxs[k]);
+
+                            switch (tlut_type) {
+                                case G_TT_RGBA16:
+                                    PRINT_PX(CVT_PX(tlut_px, 11, 31), CVT_PX(tlut_px, 6, 31), CVT_PX(tlut_px, 1, 31));
+                                    break;
+
+                                case G_TT_IA16:
+                                    PRINT_PX(CVT_PX(tlut_px, 8, 255), CVT_PX(tlut_px, 8, 255), CVT_PX(tlut_px, 8, 255));
+                                    break;
+                            }
+                        }
+                    }
+                    break;
+
+                case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_8b):
+                    {
+                        uint8_t i8_px;
+
+                        if (state->rdram->read(&i8_px, sizeof(uint8_t), 1) != 1)
+                            goto read_err;
+
+                        PRINT_PX(CVT_PX(i8_px, 0, 255), CVT_PX(i8_px, 0, 255), CVT_PX(i8_px, 0, 255));
+                    }
+                    break;
+
+                case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_8b):
+                    {
+                        uint8_t ia8_px;
+
+                        if (state->rdram->read(&ia8_px, sizeof(uint8_t), 1) != 1)
+                            goto read_err;
+
+                        PRINT_PX(CVT_PX(ia8_px, 4, 15), CVT_PX(ia8_px, 4, 15), CVT_PX(ia8_px, 4, 15));
+                    }
+                    break;
+
+                case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_8b):
+                    {
+                        if (tlut == 0 || tlut_type == G_TT_NONE)
+                            goto no_preview;
+
+                        uint8_t ci8_i;
+
+                        if (state->rdram->read(&ci8_i, sizeof(uint8_t), 1) != 1)
+                            goto read_err;
+
+                        // if (ci8_i > tlut_count)
+                        //     goto read_err;
+
+                        uint16_t tlut_px;
+
+                        uint32_t save_pos = state->rdram->pos();
+                        state->rdram->seek(tlut + sizeof(uint16_t) * ci8_i);
+                        if (state->rdram->read(&tlut_px, sizeof(uint16_t), 1) != 1)
+                            goto read_err;
+                        state->rdram->seek(save_pos);
+
+                        tlut_px = BSWAP16(tlut_px);
 
                         switch (tlut_type) {
                             case G_TT_RGBA16:
                                 PRINT_PX(CVT_PX(tlut_px, 11, 31), CVT_PX(tlut_px, 6, 31), CVT_PX(tlut_px, 1, 31));
                                 break;
+
                             case G_TT_IA16:
                                 PRINT_PX(CVT_PX(tlut_px, 8, 255), CVT_PX(tlut_px, 8, 255), CVT_PX(tlut_px, 8, 255));
                                 break;
                         }
                     }
-                } break;
-                case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_8b): {
-                    uint8_t i8_px;
+                    break;
 
-                    if (state->rdram->read(&i8_px, sizeof(uint8_t), 1) != 1)
-                        goto read_err;
+                case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_16b):
+                    {
+                        uint16_t ia16_px;
 
-                    PRINT_PX(CVT_PX(i8_px, 0, 255), CVT_PX(i8_px, 0, 255), CVT_PX(i8_px, 0, 255));
-                } break;
-                case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_8b): {
-                    uint8_t ia8_px;
+                        if (state->rdram->read(&ia16_px, sizeof(uint16_t), 1) != 1)
+                            goto read_err;
 
-                    if (state->rdram->read(&ia8_px, sizeof(uint8_t), 1) != 1)
-                        goto read_err;
+                        ia16_px = BSWAP16(ia16_px);
 
-                    PRINT_PX(CVT_PX(ia8_px, 4, 15), CVT_PX(ia8_px, 4, 15), CVT_PX(ia8_px, 4, 15));
-                } break;
-                case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_8b): {
-                    if (tlut == 0 || tlut_type == G_TT_NONE)
-                        goto no_preview;
-
-                    uint8_t ci8_i;
-
-                    if (state->rdram->read(&ci8_i, sizeof(uint8_t), 1) != 1)
-                        goto read_err;
-
-                    // if (ci8_i > tlut_count)
-                    //     goto read_err;
-
-                    uint16_t tlut_px;
-
-                    uint32_t save_pos = state->rdram->pos();
-                    state->rdram->seek(tlut + sizeof(uint16_t) * ci8_i);
-                    if (state->rdram->read(&tlut_px, sizeof(uint16_t), 1) != 1)
-                        goto read_err;
-                    state->rdram->seek(save_pos);
-
-                    tlut_px = BSWAP16(tlut_px);
-
-                    switch (tlut_type) {
-                        case G_TT_RGBA16:
-                            PRINT_PX(CVT_PX(tlut_px, 11, 31), CVT_PX(tlut_px, 6, 31), CVT_PX(tlut_px, 1, 31));
-                            break;
-                        case G_TT_IA16:
-                            PRINT_PX(CVT_PX(tlut_px, 8, 255), CVT_PX(tlut_px, 8, 255), CVT_PX(tlut_px, 8, 255));
-                            break;
+                        // TODO most of these require the alpha channel to be visible to properly see what these look
+                        // like
+                        PRINT_PX(CVT_PX(ia16_px, 8, 255), CVT_PX(ia16_px, 8, 255), CVT_PX(ia16_px, 8, 255));
                     }
-                } break;
-                case FMT_SIZ(G_IM_FMT_IA, G_IM_SIZ_16b): {
-                    uint16_t ia16_px;
+                    break;
 
-                    if (state->rdram->read(&ia16_px, sizeof(uint16_t), 1) != 1)
-                        goto read_err;
+                case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_16b):
+                    {
+                        uint16_t rgba16_px;
 
-                    ia16_px = BSWAP16(ia16_px);
+                        if (state->rdram->read(&rgba16_px, sizeof(uint16_t), 1) != 1)
+                            goto read_err;
 
-                    // TODO most of these require the alpha channel to be visible to properly see what these look
-                    // like
-                    PRINT_PX(CVT_PX(ia16_px, 8, 255), CVT_PX(ia16_px, 8, 255), CVT_PX(ia16_px, 8, 255));
-                } break;
-                case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_16b): {
-                    uint16_t rgba16_px;
+                        rgba16_px = BSWAP16(rgba16_px);
 
-                    if (state->rdram->read(&rgba16_px, sizeof(uint16_t), 1) != 1)
-                        goto read_err;
+                        PRINT_PX(CVT_PX(rgba16_px, 11, 31), CVT_PX(rgba16_px, 6, 31), CVT_PX(rgba16_px, 1, 31));
+                    }
+                    break;
 
-                    rgba16_px = BSWAP16(rgba16_px);
+                case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_32b):
+                    {
+                        uint32_t rgba32_px;
 
-                    PRINT_PX(CVT_PX(rgba16_px, 11, 31), CVT_PX(rgba16_px, 6, 31), CVT_PX(rgba16_px, 1, 31));
-                } break;
-                case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_32b): {
-                    uint32_t rgba32_px;
+                        if (state->rdram->read(&rgba32_px, sizeof(uint32_t), 1) != 1)
+                            goto read_err;
 
-                    if (state->rdram->read(&rgba32_px, sizeof(uint32_t), 1) != 1)
-                        goto read_err;
+                        rgba32_px = BSWAP32(rgba32_px);
 
-                    rgba32_px = BSWAP32(rgba32_px);
+                        PRINT_PX(CVT_PX(rgba32_px, 24, 255), CVT_PX(rgba32_px, 16, 255), CVT_PX(rgba32_px, 8, 255));
+                    }
+                    break;
 
-                    PRINT_PX(CVT_PX(rgba32_px, 24, 255), CVT_PX(rgba32_px, 16, 255), CVT_PX(rgba32_px, 8, 255));
-                } break;
                 // TODO YUV? but who even uses YUV (it would also be more useful to show different decoding stages..)
                 default:
                     goto bad_fmt_siz_err;
@@ -1509,7 +1567,7 @@ addr_in_rdram(gfx_state_t *state, uint32_t addr)
 static uint32_t
 segmented_to_physical(gfx_state_t *state, uint32_t addr)
 {
-    int num      = (addr << 4) >> 28;
+    int     num  = (addr << 4) >> 28;
     uint8_t num8 = addr >> 24;
 
     ARG_CHECK(state, state->segment_set_bits & (1 << num), GW_UNSET_SEGMENT, num);
@@ -1551,7 +1609,7 @@ mtxf_to_mtx(Mtx *mtx, MtxF *mf, bool swap)
 {
     for (int i = 0; i < 4; i++)
         for (int j = 0; j < 4; j++) {
-            int16_t ipart;
+            int16_t  ipart;
             uint16_t fpart;
 
             f_to_qs1616(&ipart, &fpart, mf->mf[i][j]);
@@ -1647,8 +1705,8 @@ chk_DisplayList(gfx_state_t *state)
 {
     int flag = gfxd_arg_value(1)->u;
 
-    const char *acts_as = (flag & 1) ? "SPBranchList" : "SPDisplayList";
-    chk_fn continue_chk = (flag & 1) ? chk_SPBranchList : chk_SPDisplayList;
+    const char *acts_as      = (flag & 1) ? "SPBranchList" : "SPDisplayList";
+    chk_fn      continue_chk = (flag & 1) ? chk_SPBranchList : chk_SPDisplayList;
 
     WARNING_ERROR(state, GW_UNK_DL_VARIANT, acts_as);
 
@@ -1722,7 +1780,7 @@ chk_Segment(gfx_state_t *state, int num, uint32_t seg)
 static int
 chk_SPSegment(gfx_state_t *state)
 {
-    int num      = gfxd_arg_value(0)->u;
+    int      num = gfxd_arg_value(0)->u;
     uint32_t seg = gfxd_arg_value(1)->u;
 
     return chk_Segment(state, num, seg);
@@ -1731,12 +1789,12 @@ chk_SPSegment(gfx_state_t *state)
 static int
 chk_SPRelSegment(gfx_state_t *state)
 {
-    int num         = gfxd_arg_value(0)->u;
+    int      num    = gfxd_arg_value(0)->u;
     uint32_t relseg = gfxd_arg_value(1)->u;
 
-    unsigned relnum = (relseg << 4) >> 28;
-    uint8_t relnum8 = relseg >> 24;
-    uint32_t reloff = relseg & 0xFFFFFF;
+    unsigned relnum  = (relseg << 4) >> 28;
+    uint8_t  relnum8 = relseg >> 24;
+    uint32_t reloff  = relseg & 0xFFFFFF;
 
     if (relnum8 != 0x80 && relnum8 != 0xA0) // allow direct-mapped KSEG addresses
         ARG_CHECK(state, relnum8 < 16, GW_INVALID_SEGMENT_NUM_REL);
@@ -1770,7 +1828,7 @@ void
 print_mtx_params(FILE *print_out, uint32_t params)
 {
     struct {
-        uint32_t value;
+        uint32_t    value;
         const char *set_name;
         const char *unset_name;
     } mtx_params[] = {
@@ -1822,7 +1880,7 @@ static int
 chk_SPMatrix(gfx_state_t *state)
 {
     uint32_t matrix = gfxd_arg_value(0)->u;
-    int param       = gfxd_arg_value(1)->i;
+    int      param  = gfxd_arg_value(1)->i;
 
     uint32_t matrix_phys = segmented_to_physical(state, matrix);
 
@@ -1853,7 +1911,7 @@ chk_SPMatrix(gfx_state_t *state)
     }
 
     MtxF mf;
-    Mtx mtx;
+    Mtx  mtx;
 
     if (!state->rdram->read_at(&mtx, matrix_phys, sizeof(Mtx)))
         goto err;
@@ -1936,9 +1994,9 @@ chk_scissor_cimg(gfx_state_t *state)
 static int
 chk_DPSetColorImage(gfx_state_t *state)
 {
-    int fmt            = gfxd_arg_value(0)->i;
-    int siz            = gfxd_arg_value(1)->i;
-    int width          = gfxd_arg_value(2)->i;
+    int      fmt       = gfxd_arg_value(0)->i;
+    int      siz       = gfxd_arg_value(1)->i;
+    int      width     = gfxd_arg_value(2)->i;
     uint32_t cimg      = gfxd_arg_value(3)->u;
     uint32_t cimg_phys = segmented_to_physical(state, cimg);
 
@@ -1950,23 +2008,28 @@ chk_DPSetColorImage(gfx_state_t *state)
     ARG_CHECK(state, cimg_phys % 64 == 0, GW_BAD_CIMG_ALIGNMENT);
 
     switch (FMT_SIZ(fmt, siz)) {
-        // Valid cases:
+            // Valid cases:
+
         case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_32b):
             // For 32-bit sizes, the format is fixed at 8-bit per component
             break;
+
         case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_16b):
             // For 16-bit sizes, the format is fixed at 5-bit per component
             break;
+
         case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_8b):
             // For 8-bit sizes, the format alternates 8-bit red, 8-bit green, etc.
             break;
 
-        // Invalid cases:
+            // Invalid cases:
+
         case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_8b):
             // This is invalid but is common enough (due to the N64 programming manual supporting it..) that
             // we let this be a warning rather than an error
             ARG_CHECK(state, 0, GW_CI_CIMG_FMTSIZ);
             break;
+
         default:
             ARG_CHECK(state, 0, GW_INVALID_CIMG_FMTSIZ);
             break;
@@ -2040,9 +2103,9 @@ chk_ValidImgFmtSiz(int fmt, int siz)
 static int
 chk_DPSetTextureImage(gfx_state_t *state)
 {
-    int fmt            = gfxd_arg_value(0)->i;
-    int siz            = gfxd_arg_value(1)->i;
-    int width          = gfxd_arg_value(2)->i;
+    int      fmt       = gfxd_arg_value(0)->i;
+    int      siz       = gfxd_arg_value(1)->i;
+    int      width     = gfxd_arg_value(2)->i;
     uint32_t timg      = gfxd_arg_value(3)->u;
     uint32_t timg_phys = segmented_to_physical(state, timg);
 
@@ -2166,9 +2229,9 @@ err:
 static int
 chk_SPVertex(gfx_state_t *state)
 {
-    uint32_t v = gfxd_arg_value(0)->u;
-    int n      = gfxd_arg_value(1)->i;
-    int v0     = gfxd_arg_value(2)->i;
+    uint32_t v  = gfxd_arg_value(0)->u;
+    int      n  = gfxd_arg_value(1)->i;
+    int      v0 = gfxd_arg_value(2)->i;
 
     uint32_t v_phys = segmented_to_physical(state, v);
 
@@ -2280,8 +2343,8 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
     bool uses_tile0 = false;
     bool uses_tile1 = false;
 
-    uint32_t rm    = OTHERMODE_VAL(state, lo, RENDERMODE);
-    int cycle_type = OTHERMODE_VAL(state, hi, CYCLETYPE);
+    uint32_t rm         = OTHERMODE_VAL(state, lo, RENDERMODE);
+    int      cycle_type = OTHERMODE_VAL(state, hi, CYCLETYPE);
 
     ARG_CHECK(state, !((cycle_type == G_CYC_FILL && state->last_cimg.siz == G_IM_SIZ_4b)), GW_FILLMODE_4B);
     ARG_CHECK(state, !((cycle_type == G_CYC_COPY && state->last_cimg.siz == G_IM_SIZ_32b)), GW_COPYMODE_32B);
@@ -2398,6 +2461,7 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
             uses_tile0 = CC_C_HAS(&state->cc, TEXEL0, 1) || CC_A_HAS(&state->cc, TEXEL0, 1) ||
                          CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
             break;
+
         case G_CYC_2CYCLE:
             // check cc does not use COMBINED input in the first cycle
             ARG_CHECK(state, !CC_C_HAS(&state->cc, COMBINED, 0), GW_CC_COMBINED_IN_C2_C1, "RGB");
@@ -2429,11 +2493,13 @@ chk_render_primitive(gfx_state_t *state, enum prim_type prim_type, int tile)
                          CC_A_HAS(&state->cc, TEXEL1, 0) || CC_A_HAS(&state->cc, TEXEL0, 1) ||
                          CC_C_HAS(&state->cc, TEXEL1_ALPHA, 0) || CC_C_HAS(&state->cc, TEXEL0_ALPHA, 1);
             break;
+
         case G_CYC_FILL:
             // Color/depth reading and per-pixel depth writing crash in fill mode
             ARG_CHECK(state, !((rm & IM_RD) || z_cmp), GW_FILLMODE_CIMG_ZIMG_RD_PER_PIXEL);
             ARG_CHECK(state, !(z_upd && zsrc == G_ZS_PIXEL), GW_FILLMODE_ZIMG_WR_PER_PIXEL);
             break;
+
         case G_CYC_COPY:
             // Color/depth reading and per-pixel depth writing crash in copy mode
             ARG_CHECK(state, !((rm & IM_RD) || z_cmp), GW_COPYMODE_CIMG_ZIMG_RD_PER_PIXEL);
@@ -2596,8 +2662,8 @@ static int
 chk_DPSetCombine(gfx_state_t *state)
 {
     uint32_t *cc_data = (uint32_t *)(gfxd_macro_data() + gfxd_macro_offset());
-    uint32_t cc_hi    = BSWAP32(cc_data[0]);
-    uint32_t cc_lo    = BSWAP32(cc_data[1]);
+    uint32_t  cc_hi   = BSWAP32(cc_data[0]);
+    uint32_t  cc_lo   = BSWAP32(cc_data[1]);
 
     CHECK_PIPESYNC(state);
 
@@ -2816,8 +2882,8 @@ chk_DPSetRenderMode(gfx_state_t *state)
 static int
 chk_SPSetOtherModeHi(gfx_state_t *state)
 {
-    int sft       = gfxd_arg_value(0)->i;
-    int len       = gfxd_arg_value(1)->i;
+    int      sft  = gfxd_arg_value(0)->i;
+    int      len  = gfxd_arg_value(1)->i;
     unsigned mode = gfxd_arg_value(2)->u;
     unsigned mask = ((1 << len) - 1) << sft;
 
@@ -2829,8 +2895,8 @@ chk_SPSetOtherModeHi(gfx_state_t *state)
 static int
 chk_SPSetOtherModeLo(gfx_state_t *state)
 {
-    int sft       = gfxd_arg_value(0)->i;
-    int len       = gfxd_arg_value(1)->i;
+    int      sft  = gfxd_arg_value(0)->i;
+    int      len  = gfxd_arg_value(1)->i;
     unsigned mode = gfxd_arg_value(2)->u;
     unsigned mask = ((1 << len) - 1) << sft;
 
@@ -2842,9 +2908,9 @@ chk_SPSetOtherModeLo(gfx_state_t *state)
 static int
 chk_SPSetOtherMode(gfx_state_t *state)
 {
-    int opc       = gfxd_arg_value(0)->i;
-    int sft       = gfxd_arg_value(1)->i;
-    int len       = gfxd_arg_value(2)->i;
+    int      opc  = gfxd_arg_value(0)->i;
+    int      sft  = gfxd_arg_value(1)->i;
+    int      len  = gfxd_arg_value(2)->i;
     unsigned mode = gfxd_arg_value(3)->u;
     unsigned mask = ((1 << len) - 1) << sft;
 
@@ -2853,10 +2919,12 @@ chk_SPSetOtherMode(gfx_state_t *state)
             state->othermode_hi &= (~0) & ~mask;
             state->othermode_hi |= mode & mask;
             break;
+
         case G_SETOTHERMODE_L:
             state->othermode_lo &= (~0) & ~mask;
             state->othermode_lo |= mode & mask;
             break;
+
         default:
             assert(!"bad opcode in SPSetOtherMode?");
     }
@@ -2880,11 +2948,11 @@ chk_DPSetOtherMode(gfx_state_t *state)
 static int
 chk_DPLoadBlock(gfx_state_t *state)
 {
-    int tile     = gfxd_arg_value(0)->i;
-    unsigned uls = gfxd_arg_value(1)->u;
-    unsigned ult = gfxd_arg_value(2)->u;
-    unsigned lrs = gfxd_arg_value(3)->u;
-    unsigned dxt = gfxd_arg_value(4)->u;
+    int      tile = gfxd_arg_value(0)->i;
+    unsigned uls  = gfxd_arg_value(1)->u;
+    unsigned ult  = gfxd_arg_value(2)->u;
+    unsigned lrs  = gfxd_arg_value(3)->u;
+    unsigned dxt  = gfxd_arg_value(4)->u;
 
     tile_descriptor_t *tile_desc = get_tile_desc(state, tile);
 
@@ -2924,11 +2992,11 @@ chk_DPLoadBlock(gfx_state_t *state)
 static int
 chk_DPLoadTile(gfx_state_t *state)
 {
-    int tile     = gfxd_arg_value(0)->i;
-    unsigned uls = gfxd_arg_value(1)->u;
-    unsigned ult = gfxd_arg_value(2)->u;
-    unsigned lrs = gfxd_arg_value(3)->u;
-    unsigned lrt = gfxd_arg_value(4)->u;
+    int      tile = gfxd_arg_value(0)->i;
+    unsigned uls  = gfxd_arg_value(1)->u;
+    unsigned ult  = gfxd_arg_value(2)->u;
+    unsigned lrs  = gfxd_arg_value(3)->u;
+    unsigned lrt  = gfxd_arg_value(4)->u;
 
     tile_descriptor_t *tile_desc = get_tile_desc(state, tile);
 
@@ -2961,16 +3029,16 @@ static int
 chk_DPLoadTLUTCmd(gfx_state_t *state)
 {
     uint32_t *ltlut_data = (uint32_t *)gfxd_macro_data();
-    uint32_t ltlut_hi    = BSWAP32(ltlut_data[0]);
-    uint32_t ltlut_lo    = BSWAP32(ltlut_data[1]);
+    uint32_t  ltlut_hi   = BSWAP32(ltlut_data[0]);
+    uint32_t  ltlut_lo   = BSWAP32(ltlut_data[1]);
 
     // LoadTLUTCmd actually has more fields, it's the same command format as LoadTile
     // however the macros provided for this command by the SDK leave most as 0.
-    int tile    = SHIFTR(ltlut_lo, 3, 24);
-    qu102_t uls = SHIFTR(ltlut_hi, 12, 12);
-    qu102_t ult = SHIFTR(ltlut_hi, 12, 0);
-    qu102_t lrs = SHIFTR(ltlut_lo, 12, 12);
-    qu102_t lrt = SHIFTR(ltlut_lo, 12, 0);
+    int     tile = SHIFTR(ltlut_lo, 3, 24);
+    qu102_t uls  = SHIFTR(ltlut_hi, 12, 12);
+    qu102_t ult  = SHIFTR(ltlut_hi, 12, 0);
+    qu102_t lrs  = SHIFTR(ltlut_lo, 12, 12);
+    qu102_t lrt  = SHIFTR(ltlut_lo, 12, 0);
 
     int count = lrs >> 2; // count here is actually count - 1
 
@@ -3095,18 +3163,18 @@ chk_DPSetPrimColor(gfx_state_t *state)
 static int
 chk_DPSetTile(gfx_state_t *state)
 {
-    int fmt       = gfxd_arg_value(0)->i;
-    int siz       = gfxd_arg_value(1)->i;
-    int line      = gfxd_arg_value(2)->i;
-    uint16_t tmem = gfxd_arg_value(3)->u;
-    int tile      = gfxd_arg_value(4)->i;
-    int pal       = gfxd_arg_value(5)->i;
-    unsigned cmt  = gfxd_arg_value(6)->u;
-    int maskt     = gfxd_arg_value(7)->i;
-    int shiftt    = gfxd_arg_value(8)->i;
-    unsigned cms  = gfxd_arg_value(9)->u;
-    int masks     = gfxd_arg_value(10)->i;
-    int shifts    = gfxd_arg_value(11)->i;
+    int      fmt    = gfxd_arg_value(0)->i;
+    int      siz    = gfxd_arg_value(1)->i;
+    int      line   = gfxd_arg_value(2)->i;
+    uint16_t tmem   = gfxd_arg_value(3)->u;
+    int      tile   = gfxd_arg_value(4)->i;
+    int      pal    = gfxd_arg_value(5)->i;
+    unsigned cmt    = gfxd_arg_value(6)->u;
+    int      maskt  = gfxd_arg_value(7)->i;
+    int      shiftt = gfxd_arg_value(8)->i;
+    unsigned cms    = gfxd_arg_value(9)->u;
+    int      masks  = gfxd_arg_value(10)->i;
+    int      shifts = gfxd_arg_value(11)->i;
 
     tile_descriptor_t *tile_desc = get_tile_desc(state, tile);
 
@@ -3254,11 +3322,11 @@ chk_scissor(gfx_state_t *state, int mode, qu102_t ulx, qu102_t uly, qu102_t lrx,
 static int
 chk_DPSetScissorFrac(gfx_state_t *state)
 {
-    int mode    = gfxd_arg_value(0)->i;
-    qu102_t ulx = gfxd_arg_value(1)->u;
-    qu102_t uly = gfxd_arg_value(2)->u;
-    qu102_t lrx = gfxd_arg_value(3)->u;
-    qu102_t lry = gfxd_arg_value(4)->u;
+    int     mode = gfxd_arg_value(0)->i;
+    qu102_t ulx  = gfxd_arg_value(1)->u;
+    qu102_t uly  = gfxd_arg_value(2)->u;
+    qu102_t lrx  = gfxd_arg_value(3)->u;
+    qu102_t lry  = gfxd_arg_value(4)->u;
 
     return chk_scissor(state, mode, ulx, uly, lrx, lry);
 }
@@ -3266,11 +3334,11 @@ chk_DPSetScissorFrac(gfx_state_t *state)
 static int
 chk_DPSetScissor(gfx_state_t *state)
 {
-    int mode     = gfxd_arg_value(0)->i;
-    unsigned ulx = gfxd_arg_value(1)->u;
-    unsigned uly = gfxd_arg_value(2)->u;
-    unsigned lrx = gfxd_arg_value(3)->u;
-    unsigned lry = gfxd_arg_value(4)->u;
+    int      mode = gfxd_arg_value(0)->i;
+    unsigned ulx  = gfxd_arg_value(1)->u;
+    unsigned uly  = gfxd_arg_value(2)->u;
+    unsigned lrx  = gfxd_arg_value(3)->u;
+    unsigned lry  = gfxd_arg_value(4)->u;
 
     return chk_scissor(state, mode, qu102(ulx), qu102(uly), qu102(lrx), qu102(lry));
 }
@@ -3278,11 +3346,11 @@ chk_DPSetScissor(gfx_state_t *state)
 static int
 chk_DPSetTileSize(gfx_state_t *state)
 {
-    int tile    = gfxd_arg_value(0)->i;
-    qu102_t uls = gfxd_arg_value(1)->u;
-    qu102_t ult = gfxd_arg_value(2)->u;
-    qu102_t lrs = gfxd_arg_value(3)->u;
-    qu102_t lrt = gfxd_arg_value(4)->u;
+    int     tile = gfxd_arg_value(0)->i;
+    qu102_t uls  = gfxd_arg_value(1)->u;
+    qu102_t ult  = gfxd_arg_value(2)->u;
+    qu102_t lrs  = gfxd_arg_value(3)->u;
+    qu102_t lrt  = gfxd_arg_value(4)->u;
 
     tile_descriptor_t *tile_desc = get_tile_desc(state, tile);
 
@@ -3304,8 +3372,8 @@ chk_SPBranchLessZraw(gfx_state_t *state)
 {
     // TODO
     uint32_t branchdl = gfxd_arg_value(0)->u;
-    int vtx           = gfxd_arg_value(1)->i;
-    int zval          = gfxd_arg_value(2)->i;
+    int      vtx      = gfxd_arg_value(1)->i;
+    int      zval     = gfxd_arg_value(2)->i;
 
     uint32_t branchdl_phys = segmented_to_physical(state, branchdl);
 
@@ -3483,7 +3551,7 @@ chk_SPLookAt(gfx_state_t *state)
 static int
 chk_SPModifyVertex(gfx_state_t *state)
 {
-    int vtx        = gfxd_arg_value(0)->i;
+    int      vtx   = gfxd_arg_value(0)->i;
     unsigned where = gfxd_arg_value(1)->u;
     unsigned val   = gfxd_arg_value(2)->u;
 
@@ -3614,11 +3682,11 @@ chk_SPLightColor(gfx_state_t *state)
 static int
 chk_SPTexture(gfx_state_t *state)
 {
-    qu510_t sc = gfxd_arg_value(0)->i;
-    qu510_t tc = gfxd_arg_value(1)->i;
-    int level  = gfxd_arg_value(2)->i;
-    int tile   = gfxd_arg_value(3)->i;
-    int on     = gfxd_arg_value(4)->i;
+    qu510_t sc    = gfxd_arg_value(0)->i;
+    qu510_t tc    = gfxd_arg_value(1)->i;
+    int     level = gfxd_arg_value(2)->i;
+    int     tile  = gfxd_arg_value(3)->i;
+    int     on    = gfxd_arg_value(4)->i;
 
     tile_descriptor_t *tile_desc = get_tile_desc(state, tile);
 
@@ -3642,7 +3710,7 @@ chk_SPTextureRectangle(gfx_state_t *state)
     qu102_t uly  = gfxd_arg_value(1)->u;
     qu102_t lrx  = gfxd_arg_value(2)->u;
     qu102_t lry  = gfxd_arg_value(3)->u;
-    int tile     = gfxd_arg_value(4)->i;
+    int     tile = gfxd_arg_value(4)->i;
     qs105_t s    = gfxd_arg_value(5)->i;
     qs105_t t    = gfxd_arg_value(6)->i;
     qs510_t dsdx = gfxd_arg_value(7)->i;
@@ -3664,7 +3732,7 @@ chk_SPTextureRectangleFlip(gfx_state_t *state)
     qu102_t uly  = gfxd_arg_value(1)->u;
     qu102_t lrx  = gfxd_arg_value(2)->u;
     qu102_t lry  = gfxd_arg_value(3)->u;
-    int tile     = gfxd_arg_value(4)->i;
+    int     tile = gfxd_arg_value(4)->i;
     qs105_t s    = gfxd_arg_value(5)->i;
     qs105_t t    = gfxd_arg_value(6)->i;
     qs510_t dsdx = gfxd_arg_value(7)->i;
@@ -3953,11 +4021,14 @@ ltb_width_valid(int width, int siz)
             case G_IM_SIZ_4b:
                 nominal_width *= 4;
                 break;
+
             case G_IM_SIZ_8b:
                 nominal_width *= 2;
                 break;
+
             case G_IM_SIZ_16b:
                 break;
+
             case G_IM_SIZ_32b:
                 nominal_width /= 2;
                 break;
@@ -3986,9 +4057,11 @@ max_lines(int width, int siz)
         case G_IM_SIZ_4b:
             width /= 4;
             break;
+
         case G_IM_SIZ_8b:
             width /= 2;
             break;
+
         case G_IM_SIZ_32b:
             width *= 2; // TODO ?
             break;
@@ -4017,9 +4090,9 @@ max_lines(int width, int siz)
     } else { // accumulating dxt builds up small error over time for non power of 2 values,
         // meaning the true max lines may be less than the amount that is required
         double int_part;
-        int words_per_line = bytes_per_line / 8;
-        float dxt          = 2048 / (float)words_per_line;
-        float err_per_line = words_per_line * (1.0f - modf(dxt, &int_part));
+        int    words_per_line = bytes_per_line / 8;
+        float  dxt            = 2048 / (float)words_per_line;
+        float  err_per_line   = words_per_line * (1.0f - modf(dxt, &int_part));
 
         max_lines = floorf(dxt / err_per_line);
         if (max_lines > abs_max_lines)
@@ -4033,9 +4106,11 @@ max_lines(int width, int siz)
         case G_IM_SIZ_4b:
             max_lines *= 4;
             break;
+
         case G_IM_SIZ_8b:
             max_lines *= 2;
             break;
+
             // case G_IM_SIZ_32b:
             //     max_lines /= 2;
             //     break;
@@ -4081,18 +4156,18 @@ chk_LTB(gfx_state_t *state, uint32_t timg, int fmt, int siz, int width, int heig
 static int
 chk_DPLoadTextureBlock(gfx_state_t *state)
 {
-    uint32_t timg = gfxd_arg_value(0)->u;
-    int fmt       = gfxd_arg_value(1)->i;
-    int siz       = gfxd_arg_value(2)->i;
-    int width     = gfxd_arg_value(3)->i;
-    int height    = gfxd_arg_value(4)->i;
-    int pal       = gfxd_arg_value(5)->i;
-    unsigned cms  = gfxd_arg_value(6)->u;
-    unsigned cmt  = gfxd_arg_value(7)->u;
-    int masks     = gfxd_arg_value(8)->i;
-    int maskt     = gfxd_arg_value(9)->i;
-    int shifts    = gfxd_arg_value(10)->i;
-    int shiftt    = gfxd_arg_value(11)->i;
+    uint32_t timg   = gfxd_arg_value(0)->u;
+    int      fmt    = gfxd_arg_value(1)->i;
+    int      siz    = gfxd_arg_value(2)->i;
+    int      width  = gfxd_arg_value(3)->i;
+    int      height = gfxd_arg_value(4)->i;
+    int      pal    = gfxd_arg_value(5)->i;
+    unsigned cms    = gfxd_arg_value(6)->u;
+    unsigned cmt    = gfxd_arg_value(7)->u;
+    int      masks  = gfxd_arg_value(8)->i;
+    int      maskt  = gfxd_arg_value(9)->i;
+    int      shifts = gfxd_arg_value(10)->i;
+    int      shiftt = gfxd_arg_value(11)->i;
 
     return chk_LTB(state, timg, fmt, siz, width, height, pal, cms, cmt, masks, maskt, shifts, shiftt);
 }
@@ -4100,18 +4175,18 @@ chk_DPLoadTextureBlock(gfx_state_t *state)
 static int
 chk_DPLoadTextureBlock_4b(gfx_state_t *state)
 {
-    unsigned timg = gfxd_arg_value(0)->u;
-    int fmt       = gfxd_arg_value(1)->i;
-    int siz       = G_IM_SIZ_4b;
-    int width     = gfxd_arg_value(2)->i;
-    int height    = gfxd_arg_value(3)->i;
-    int pal       = gfxd_arg_value(4)->i;
-    unsigned cms  = gfxd_arg_value(5)->u;
-    unsigned cmt  = gfxd_arg_value(6)->u;
-    int masks     = gfxd_arg_value(7)->i;
-    int maskt     = gfxd_arg_value(8)->i;
-    int shifts    = gfxd_arg_value(9)->i;
-    int shiftt    = gfxd_arg_value(10)->i;
+    unsigned timg   = gfxd_arg_value(0)->u;
+    int      fmt    = gfxd_arg_value(1)->i;
+    int      siz    = G_IM_SIZ_4b;
+    int      width  = gfxd_arg_value(2)->i;
+    int      height = gfxd_arg_value(3)->i;
+    int      pal    = gfxd_arg_value(4)->i;
+    unsigned cms    = gfxd_arg_value(5)->u;
+    unsigned cmt    = gfxd_arg_value(6)->u;
+    int      masks  = gfxd_arg_value(7)->i;
+    int      maskt  = gfxd_arg_value(8)->i;
+    int      shifts = gfxd_arg_value(9)->i;
+    int      shiftt = gfxd_arg_value(10)->i;
 
     return chk_LTB(state, timg, fmt, siz, width, height, pal, cms, cmt, masks, maskt, shifts, shiftt);
 }
@@ -4309,9 +4384,9 @@ static void
 arg_handler(int arg_num)
 {
     // No checking is done here, it is left entirely to command handlers
-    int m_id           = gfxd_macro_id();
-    int arg_type       = gfxd_arg_type(arg_num);
-    gfx_state_t *state = (gfx_state_t *)gfxd_udata_get();
+    int          m_id     = gfxd_macro_id();
+    int          arg_type = gfxd_arg_type(arg_num);
+    gfx_state_t *state    = (gfx_state_t *)gfxd_udata_get();
 
     if (gfxd_arg_callbacks(arg_num) != 0)
         return;
@@ -4348,6 +4423,7 @@ arg_handler(int arg_num)
             if (ram_addr != arg_value->u)
                 gfxd_printf(" /* 0x%08X */", ram_addr);
             break;
+
         case gfxd_Color:
             if (m_id == gfxd_DPSetFillColor && state->cimg_set) {
                 const char *color_fmt =
@@ -4375,6 +4451,7 @@ arg_handler(int arg_num)
                             gfxd_puts(")");
                         }
                         break;
+
                     case FMT_SIZ(G_IM_FMT_RGBA, G_IM_SIZ_32b):
                     case FMT_SIZ(G_IM_FMT_I, G_IM_SIZ_8b):
                     case FMT_SIZ(G_IM_FMT_CI, G_IM_SIZ_8b):
@@ -4412,17 +4489,21 @@ decode_noop_cmd(gfx_state_t *state)
             print_string(state, segmented_to_physical(state, noop_data->u), gfx_fprintf_wrapper, NULL);
             gfxd_printf(VT_RST ", 0x%04X)", noop_data->u, noop_data1->u);
             break;
+
         case 2:
             gfxd_printf("gsDPNoOpString(" STRING_COLOR);
             print_string(state, segmented_to_physical(state, noop_data->u), gfx_fprintf_wrapper, NULL);
             gfxd_printf(VT_RST ", 0x%04X)", noop_data1->u);
             break;
+
         case 3:
             gfxd_printf("gsDPNoOpWord(0x%08X, 0x%04X)", noop_data->u, noop_data1->u);
             break;
+
         case 4:
             gfxd_printf("gsDPNoOpFloat(0x%08X, 0x%04X)", noop_data->u, noop_data1->u);
             break;
+
         case 5:
             if (noop_data->u != 0)
                 goto emit_noop_tag3;
@@ -4431,10 +4512,13 @@ decode_noop_cmd(gfx_state_t *state)
                 gfxd_printf("gsDPNoOpQuiet()");
             else
                 gfxd_printf("gsDPNoOpVerbose(0x%04X)", noop_data1->u);
+
             break;
+
         case 6:
             gfxd_printf("gsDPNoOpCallBack(0x%08X, 0x%04X)", noop_data->u, noop_data1->u);
             break;
+
         case 7:
             gfxd_printf(VT_FGCOL(GREEN) "gsDPNoOpOpenDisp" VT_RST "(" STRING_COLOR);
             print_string(state, segmented_to_physical(state, noop_data->u), gfx_fprintf_wrapper, NULL);
@@ -4449,6 +4533,7 @@ decode_noop_cmd(gfx_state_t *state)
                 obstack_push(&state->disp_stack, &disp_ent);
             }
             break;
+
         case 8:
             gfxd_printf(VT_FGCOL(RED) "gsDPNoOpCloseDisp" VT_RST "(" STRING_COLOR);
             print_string(state, segmented_to_physical(state, noop_data->u), gfx_fprintf_wrapper, NULL);
@@ -4462,6 +4547,7 @@ decode_noop_cmd(gfx_state_t *state)
                     obstack_pop(&state->disp_stack, 1);
             }
             break;
+
         default:
         emit_noop_tag3:
             gfxd_printf("%s(0x%02X, 0x%08X, 0x%04X)", gfxd_macro_name(), noop_type->u, noop_data->u, noop_data1->u);
@@ -4515,7 +4601,7 @@ macro_print(void)
 static int
 do_single_gfx(void)
 {
-    int m_id           = gfxd_macro_id();
+    int          m_id  = gfxd_macro_id();
     gfx_state_t *state = (gfx_state_t *)gfxd_udata_get();
 
     if (state->multi_packet && state->options->print_multi_packet) {
@@ -4548,7 +4634,7 @@ do_single_gfx(void)
 static int
 macro_fn(void)
 {
-    int m_id           = gfxd_macro_id();
+    int          m_id  = gfxd_macro_id();
     gfx_state_t *state = (gfx_state_t *)gfxd_udata_get();
 
     gfxd_printf("  /* %6d %08X */  ", state->n_gfx, state->gfx_addr);
@@ -4656,24 +4742,31 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
 
     uint32_t start_addr = -1U;
     switch (start_location->type) {
-        case USE_START_ADDR_AT_POINTER: {
-            uint32_t auto_start_addr;
-            if (!state.rdram->read_at(&auto_start_addr, start_location->start_location_ptr & ~KSEG_MASK,
-                                      sizeof(uint32_t))) {
-                fprintf(print_out, ERROR_COLOR "FAILED to read start address from pointer 0x%08" PRIx32 VT_RST "\n",
-                        start_location->start_location_ptr);
-                goto err;
+        case USE_START_ADDR_AT_POINTER:
+            {
+                uint32_t auto_start_addr;
+                if (!state.rdram->read_at(&auto_start_addr, start_location->start_location_ptr & ~KSEG_MASK,
+                                          sizeof(uint32_t))) {
+                    fprintf(print_out, ERROR_COLOR "FAILED to read start address from pointer 0x%08" PRIx32 VT_RST "\n",
+                            start_location->start_location_ptr);
+                    goto err;
+                }
+                start_addr = BSWAP32(auto_start_addr);
             }
-            start_addr = BSWAP32(auto_start_addr);
-        } break;
-        case USE_GIVEN_START_ADDR: {
-            start_addr = start_location->start_location;
-        } break;
+            break;
+
+        case USE_GIVEN_START_ADDR:
+            {
+                start_addr = start_location->start_location;
+            }
+            break;
+
         default:
             fprintf(print_out, ERROR_COLOR "FAILED to get start address, unknown type %d" VT_RST "\n",
                     (int)start_location->type);
             goto err;
     }
+
     start_addr &= ~KSEG_MASK;
     if (!state.rdram->seek(start_addr)) {
         fprintf(print_out, ERROR_COLOR "FAILED to seek to start address" VT_RST "\n");

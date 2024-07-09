@@ -33,7 +33,7 @@
     }
 
 struct F3DZEX_const {
-    uint32_t value;
+    uint32_t    value;
     const char *name;
 };
 

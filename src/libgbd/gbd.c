@@ -432,8 +432,8 @@ print_string(gfx_state_t *state, uint32_t str_addr, fprint_fn pfn, FILE *file)
     if (state->rdram->read(in_buf, sizeof(char), str_len) != str_len)
         goto err;
 
-    /* convert string from EUC-JP to UTF-8 */
-    cd = iconv_open("UTF-8", "EUC-JP");
+    /* convert string to UTF-8 */
+    cd = iconv_open("UTF-8", state->options->string_encoding);
 
     in_bytes_tot   = sizeof(char) * str_len;
     out_bytes_max  = sizeof(wchar_t) * str_len;
@@ -4734,6 +4734,10 @@ analyze_gbi(FILE *print_out, gfx_ucode_registry_t *ucodes, gbd_options_t *opts, 
     state.ucodes  = ucodes;
     state.rdram   = rdram;
     state.options = opts;
+
+    if (state.options->string_encoding == NULL) {
+        state.options->string_encoding = "EUC-JP";
+    }
 
     if (state.rdram->open(rdram_arg)) {
         fprintf(print_out, ERROR_COLOR "FAILED to open RDRAM image" VT_RST "\n");

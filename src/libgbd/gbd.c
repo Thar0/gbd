@@ -288,7 +288,7 @@ enum gbi_warning_classes {
     GWC_MISSING_SYNCS,
 };
 static enum gbi_warning warn_classes[][8] = {
-    [GWC_MISSING_SYNCS] = {GW_MISSING_PIPESYNC, GW_MISSING_LOADSYNC, GW_MISSING_TILESYNC},
+    [GWC_MISSING_SYNCS] = { GW_MISSING_PIPESYNC, GW_MISSING_LOADSYNC, GW_MISSING_TILESYNC },
 };
 
 // warning flags

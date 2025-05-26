@@ -11,7 +11,7 @@
 static long
 rdram_file_pos(void);
 
-static int
+static bool
 rdram_file_seek(uint32_t addr);
 
 static FILE *rdram_file_file;
@@ -59,7 +59,7 @@ rdram_file_read(void *buf, size_t elem_size, size_t elem_count)
 /**
  * Returns true if seek to `addr` was successful.
  */
-static int
+static bool
 rdram_file_seek(uint32_t addr)
 {
     return rdram_file_addr_valid(addr) && (fseek(rdram_file_file, addr, SEEK_SET) == 0);
@@ -68,7 +68,7 @@ rdram_file_seek(uint32_t addr)
 /**
  * Returns true if read of `size` bytes at `addr` was successful.
  */
-static int
+static bool
 rdram_file_read_at(void *buf, uint32_t addr, size_t size)
 {
     return rdram_file_seek(addr) && (rdram_file_read(buf, size, 1) == 1);

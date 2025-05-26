@@ -260,7 +260,7 @@ class gbd_options_t(ctypes.Structure):
         print_multi_packet=False,
         hex_color=False,
         q_macros=True,
-        to_num=None,
+        to_num: int | None = None,
         no_volume_cull=False,
         no_depth_cull=False,
         all_depth_cull=False,

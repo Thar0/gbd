@@ -24,7 +24,8 @@ usage(char *exec_name)
            "[--print-vertices] "
            "[--print-matrices] "
            "[--print-lights] "
-           "[--to-line <n>] "
+           "[--to-num <n>] "
+           "[--encoding <encoding>] "
            "[--quiet] "
            "<file path> "
            "<WORK_DISP start | *<pointer to WORK_DISP start>>"
@@ -38,15 +39,16 @@ main(int argc, char **argv)
 {
     /* MQ debug ROM ucodes, TODO make ucodes externally configurable */
     gfx_ucode_registry_t ucodes[] = {
-        {0x80155F50,  gfxd_f3dex2},
-        { 0x80113070, gfxd_s2dex2},
-        { 0,          NULL       },
+        { 0x80155F50, gfxd_f3dex2 },
+        { 0x80113070, gfxd_s2dex2 },
+        { 0,          NULL        },
     };
     // default AUTO start pointer (MQ debug sPrevTaskWorkBuffer)
 #define WORK_DISP_PTR 0x8012D260
 
     gbd_options_t opts = {
-        .q_macros = true,
+        .q_macros        = true,
+        .string_encoding = "EUC-JP",
     };
 
     const char                *file_name = NULL;
@@ -78,6 +80,11 @@ main(int argc, char **argv)
             if (i + 1 >= argc || sscanf(argv[i + 1], "%d", &opts.to_num) != 1)
                 return usage(argv[0]);
             i++;
+        } else if (strequ(argv[i], "--encoding")) {
+            if (i + 1 >= argc)
+                return usage(argv[0]);
+            i++;
+            opts.string_encoding = argv[i];
         } else {
             // required args
 

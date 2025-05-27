@@ -75,8 +75,9 @@ $(LIBGBD_STATIC): $(O_FILES_LIBGBD)
 	$(AR) rcs $@ $^
 
 # libgbd for dynamically linking
+# Link libgfxd with --whole-archive to link in all ucodes
 $(LIBGBD_SHARED): $(O_FILES_LIBGBD) $(LIBGFXD) $(ICONV)
-	$(CC) -shared $^ -o $@
+	$(CC) -shared $(O_FILES_LIBGBD) $(ICONV) -Wl,--whole-archive $(LIBGFXD) -Wl,--no-whole-archive -o $@
 
 # gbd front-end
 $(TARGET_BINARY): $(O_FILES_GBD) $(LIBGBD_STATIC) $(LIBGFXD) $(ICONV)
